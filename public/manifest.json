@@ -1,0 +1,18 @@
+{
+  "name": "Khoram2Ry",
+  "short_name": "Khoram2Ry",
+  "description": "کلاینت مدرن مدیریت کانفیگ V2Ray",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07080C",
+  "theme_color": "#07080C",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
