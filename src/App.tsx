@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Activity, ArrowDown, ArrowUp, ChevronRight, CircleHelp, Download, FileText, Globe, House, Link2, Loader2, Plus, Power, RefreshCw, Search, Server, Settings2, Shield, Smartphone, Sparkles, Star, Timer, Trash2, Zap } from "lucide-react";
+import { Activity, ArrowDown, ArrowUp, ChevronRight, CircleHelp, Download, FileText, Globe, House, Link2, Loader2, MapPin, Plus, Power, RefreshCw, Search, Server, Settings2, Shield, Smartphone, Sparkles, Star, Timer, Trash2, Zap } from "lucide-react";
 import { cn } from "./utils/cn";
 import type { AppLog, AppState, Profile, Subscription, Tab, TunnelStatus } from "./types";
 import { defaultState, downloadBackup, loadState, restoreBackup, saveState } from "./lib/storage";
@@ -9,6 +9,7 @@ import { CONNECT_LIMIT, STALE_SUB_MS, needProbe, rankCandidates, smartStepText }
 import { browserStatus, connectionPayload, exportText, hasNativeCore, nativeRequest, supportsNative } from "./lib/native";
 import { useTunnel } from "./lib/useTunnel";
 import { formatBytes, formatDuration, latencyColor, protoColor, uid } from "./lib/format";
+import { lookupServerGeo } from "./lib/ipGeo";
 import { Button, Choice, Dialog, Notice, textFor, Toggle, type Text } from "./components/ui";
 import { ConfigEditor, SubscriptionForm } from "./components/ConfigEditor";
 import { ProfileDetail } from "./components/ProfileDetail";
@@ -43,7 +44,7 @@ export default function App() {
   const cancelTests = useRef(false);
   const autoUpdated = useRef(false);
   const alive = useRef(true);
-  // Smart auto-connect (NPV-style): update → fastest → connect → fallback → reconnect.
+  // Smart auto-connect (automatic): update → fastest → connect → fallback → reconnect.
   const [smartActive, setSmartActive] = useState(false);
   const [smartPhase, setSmartPhase] = useState("");
   const [smartDetail, setSmartDetail] = useState("");
@@ -58,6 +59,19 @@ export default function App() {
   const selected = state.profiles.find((p) => p.id === state.selectedId) || null;
   const activeDetail = state.profiles.find((p) => p.id === detailId);
   const closeSheet = useCallback(() => setSheet(null), []);
+
+  useEffect(() => {
+    if (!selected || selected.geo) return;
+    let cancelled = false;
+    void lookupServerGeo(selected.host).then((geo) => {
+      if (cancelled) return;
+      setState((old) => ({
+        ...old,
+        profiles: old.profiles.map((p) => p.id === selected.id ? { ...p, geo } : p),
+      }));
+    }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [selected?.id, selected?.host, selected?.geo]);
 
   const notify = useCallback((message: string) => {
     setToast(message);
@@ -119,7 +133,7 @@ export default function App() {
       const existing = old.profiles.filter((p) => p.subId === sub.id);
       const incoming = result.profiles.map((p) => {
         const match = existing.find((item) => item.raw.split("#")[0] === p.raw.split("#")[0]);
-        return { ...p, id: match?.id || p.id, favorite: match?.favorite, latency: match?.latency, testedAt: match?.testedAt, subId: sub.id };
+        return { ...p, id: match?.id || p.id, favorite: match?.favorite, latency: match?.latency, testedAt: match?.testedAt, geo: match?.geo, subId: sub.id };
       });
       const profiles = [...old.profiles.filter((p) => p.subId !== sub.id), ...incoming];
       const updated = { ...sub, lastUpdated: Date.now(), error: undefined };
@@ -278,7 +292,7 @@ export default function App() {
   }, [smartActive, tunnel, busySub, refreshSubscriptions, testProfile, fail, log, notify, t]);
 
   const toggleConnection = async () => {
-    // Tapping while smart-connect runs cancels it (like NPV Tunnel).
+    // Tapping while smart-connect runs cancels it (like Khoram2Ry).
     if (smartActive) { smartCancel.current = true; return; }
     if (tunnel.busy) return;
     if (tunnel.status.state === "connected" || tunnel.status.state === "connecting") {
@@ -375,12 +389,12 @@ export default function App() {
       {storageError != null && <div className="px-5 pb-2"><Notice danger>{errorMessage(storageError, state.lang)}</Notice></div>}
       <main inert={sheet !== null} className="relative z-10 min-h-0 flex-1 overflow-y-auto scroll-thin">
         <div key={tab} className="animate-fade-up">
-          {tab === "home" && <Home t={t} selected={selected} status={tunnel.status} busy={tunnel.busy} error={tunnel.error ? errorMessage(tunnel.error, state.lang) : null} routing={state.routing} onRouting={(routing) => { try { requireIdle(); patch({ routing }); } catch (e) { fail(e); } }} onConnect={() => void toggleConnection()} onChoose={() => setTab("servers")} onAdd={() => setSheet("import")} onGetApp={() => setSheet("getapp")} onTest={() => { if (selected) void testProfile(selected).catch(fail); }} testing={!!testingId} smartActive={smartActive} smartText={smartActive && smartPhase ? smartStepText(state.lang, smartPhase, smartDetail) : ""} autoOn={state.autoFastest || state.autoReconnect} native={hasNativeCore()} />}
+          {tab === "home" && <Home t={t} selected={selected} status={tunnel.status} busy={tunnel.busy} error={tunnel.error ? errorMessage(tunnel.error, state.lang) : null} routing={state.routing} onRouting={(routing) => { try { requireIdle(); patch({ routing }); } catch (e) { fail(e); } }} onConnect={() => void toggleConnection()} onChoose={() => setTab("servers")} onAdd={() => setSheet("import")} onGetApp={() => setSheet("getapp")} onTest={() => { if (selected) void testProfile(selected).catch(fail); }} testing={!!testingId} smartActive={smartActive} smartText={smartActive && smartPhase ? smartStepText(state.lang, smartPhase, smartDetail) : ""} geo={selected?.geo} autoOn={state.autoFastest || state.autoReconnect} native={hasNativeCore()} />}
           {tab === "servers" && <div className="px-5 pb-6">
             <div className="flex items-center justify-between"><div><h2 className="text-[19px] font-semibold">{t("سرورهای من", "My servers")}</h2><p className="mt-1 text-[11px] text-white/40">{state.profiles.length} {t("کانفیگ شخصی", "personal configurations")}</p></div><Button tone="primary" aria-label={titles.import} className="h-10 min-h-10 w-10 rounded-full px-0" onClick={() => setSheet("import")}><Plus size={18} /></Button></div>
             {state.profiles.length > 0 && <><div className="mt-4 flex items-center gap-2 rounded-xl bg-white/5 px-3"><Search size={16} className="text-white/35" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("جستجوی نام، آدرس یا پروتکل", "Search name, address or protocol")} aria-label={t("جستجوی سرور", "Search servers")} className="h-11 min-w-0 flex-1 bg-transparent text-[12px] placeholder:text-white/30" /></div><div className="mt-3 grid grid-cols-2 gap-2"><Choice label={t("نمایش", "Show")} value={filter} onChange={setFilter} options={[{ value: "all", label: t("همه سرورها", "All servers") }, { value: "fav", label: t("علاقه‌مندی‌ها", "Favorites") }, ...Array.from(new Set(state.profiles.map((p) => p.protocol))).map((value) => ({ value, label: value.toUpperCase() }))]} /><Choice label={t("مرتب‌سازی", "Sort by")} value={sort} onChange={setSort} options={[{ value: "added", label: t("جدیدترین", "Newest") }, { value: "latency", label: t("تأخیر واقعی", "Measured latency") }, { value: "name", label: t("نام", "Name") }]} /></div><div className="my-3 flex items-center justify-between gap-2"><Button disabled={tunnel.locked || !filtered.length || (!!testingId && !testProgress)} onClick={() => void testAll()} className="px-3 text-[11px]"><Zap size={14} />{testProgress ? `${t("توقف", "Cancel")} ${testProgress}` : t("تست واقعی همه", "Test all through proxy")}</Button><button aria-label={t("خروجی سرورهای فیلترشده", "Export filtered servers")} disabled={!filtered.length} onClick={() => void exportText(filtered.map((p) => p.raw).join("\n"), "khoram-servers.txt").catch(fail)} className="flex h-10 w-10 items-center justify-center text-white/50"><Download size={16} /></button></div></>}
             {state.profiles.length === 0 ? <Empty title={t("سرور خودت را اضافه کن", "Bring your own server")} description={t("هیچ سروری از قبل اضافه نشده. لینک، ساب‌لینک یا کانفیگ خودت را وارد کن.", "No servers are preloaded. Import your own link, subscription or configuration.")} action={t("افزودن اولین کانفیگ", "Add your first configuration")} onAction={() => setSheet("import")} /> : !filtered.length ? <p className="py-16 text-center text-[12px] text-white/40">{t("سروری با این فیلتر پیدا نشد.", "No servers match these filters.")}</p> : <div className="space-y-2">{filtered.map((p) => <div key={p.id} className={cn("flex items-center gap-2 rounded-2xl p-3 ring-1 transition", state.selectedId === p.id ? "bg-teal-300/7 ring-teal-300/25" : "bg-white/3 ring-white/6")}>
-              <button className="flex min-w-0 flex-1 items-center gap-3 text-start" onClick={() => choose(p.id)} aria-pressed={state.selectedId === p.id}><ProtocolMark profile={p} /><div className="min-w-0 flex-1"><p className="truncate text-[13px] font-medium">{p.name}</p><p className="latin mt-1 truncate text-[10px] text-white/40" dir="ltr">{p.protocol.toUpperCase()} / {p.host}</p></div></button><div className="flex flex-col items-end"><span className={cn("latin text-[11px]", latencyColor(p.latency))}>{testingId === p.id ? <Loader2 size={13} className="animate-spin" /> : p.latency != null ? `${p.latency} ms` : p.testedAt ? t("ناموفق", "Failed") : "-"}</span><div className="mt-1 flex"><button aria-label={t("علاقه‌مندی", "Favorite")} aria-pressed={!!p.favorite} onClick={() => setState((old) => ({ ...old, profiles: old.profiles.map((item) => item.id === p.id ? { ...item, favorite: !item.favorite } : item) }))} className="p-2"><Star size={14} className={p.favorite ? "fill-amber-300 text-amber-300" : "text-white/25"} /></button><button aria-label={t("جزئیات و ویرایش", "Details and editing")} onClick={() => { setDetailId(p.id); setSheet("detail"); }} className="p-2"><ChevronRight size={15} className="text-white/40 rtl:rotate-180" /></button></div></div></div>)}</div>}
+              <button className="flex min-w-0 flex-1 items-center gap-3 text-start" onClick={() => choose(p.id)} aria-pressed={state.selectedId === p.id}><ProtocolMark profile={p} /><div className="min-w-0 flex-1"><p className="truncate text-[13px] font-medium">{p.name}</p><p className="latin mt-1 truncate text-[10px] text-white/40" dir="ltr">{p.protocol.toUpperCase()} / {p.host}</p>{p.geo && <p className="mt-1 flex items-center gap-1 text-[9px] text-teal-200/60"><MapPin size={10} />{p.geo.country || "Unknown"} · {p.geo.ip}</p>}</div></button><div className="flex flex-col items-end"><span className={cn("latin text-[11px]", latencyColor(p.latency))}>{testingId === p.id ? <Loader2 size={13} className="animate-spin" /> : p.latency != null ? `${p.latency} ms` : p.testedAt ? t("ناموفق", "Failed") : "-"}</span><div className="mt-1 flex"><button aria-label={t("علاقه‌مندی", "Favorite")} aria-pressed={!!p.favorite} onClick={() => setState((old) => ({ ...old, profiles: old.profiles.map((item) => item.id === p.id ? { ...item, favorite: !item.favorite } : item) }))} className="p-2"><Star size={14} className={p.favorite ? "fill-amber-300 text-amber-300" : "text-white/25"} /></button><button aria-label={t("جزئیات و ویرایش", "Details and editing")} onClick={() => { setDetailId(p.id); setSheet("detail"); }} className="p-2"><ChevronRight size={15} className="text-white/40 rtl:rotate-180" /></button></div></div></div>)}</div>}
           </div>}
           {tab === "subs" && <div className="px-5 pb-7"><div className="flex items-center justify-between"><div><h2 className="text-[19px] font-semibold">{t("اشتراک‌های من", "My subscriptions")}</h2><p className="mt-1 text-[11px] text-white/40">{t("سرورهای خودت، همیشه به‌روز", "Your servers, kept up to date")}</p></div><Button tone="primary" className="h-10 min-h-10 w-10 rounded-full px-0" aria-label={t("افزودن اشتراک", "Add subscription")} onClick={() => { setEditingSub(undefined); setIncomingUrl(""); setSheet("subscription"); }}><Plus size={18} /></Button></div>
             {!state.subs.length ? <Empty title={t("ساب‌لینکی اضافه نشده", "No subscriptions yet")} description={t("آدرس اشتراکی که از ارائه‌دهنده‌ات داری را وارد کن.", "Add the subscription URL from your provider.")} action={t("افزودن ساب‌لینک", "Add subscription")} onAction={() => { setEditingSub(undefined); setIncomingUrl(""); setSheet("subscription"); }} /> : <><Button className="my-4 w-full" busy={!!busySub} disabled={tunnel.locked} onClick={() => void refreshSubscriptions(state.subs)}><RefreshCw size={15} />{t("به‌روزرسانی همه", "Refresh all")}</Button><div className="space-y-3">{state.subs.map((sub) => <div key={sub.id} className="rounded-2xl bg-white/3 p-4 ring-1 ring-white/7"><div className="flex items-start justify-between gap-3"><button className="min-w-0 text-start" onClick={() => { setEditingSub(sub); setSheet("subscription"); }}><p className="truncate text-[14px] font-medium">{sub.name}</p><p className="latin mt-1 truncate text-[11px] text-white/35" dir="ltr">{safeOrigin(sub.url)}</p></button><Link2 size={18} className="mt-1 shrink-0 text-amber-200/65" /></div><p className="mt-3 text-[11px] text-white/40">{state.profiles.filter((p) => p.subId === sub.id).length} {t("سرور", "servers")} / {sub.lastUpdated ? new Date(sub.lastUpdated).toLocaleString(state.lang === "fa" ? "fa-IR" : "en-US", { dateStyle: "short", timeStyle: "short" }) : t("هنوز دریافت نشده", "Not fetched yet")}</p><Toggle label={t("فعال", "Enabled")} value={sub.enabled} disabled={!!busySub || tunnel.locked} onChange={(enabled) => patch({ subs: state.subs.map((s) => s.id === sub.id ? { ...s, enabled } : s) })} />{sub.error && <Notice danger>{sub.error}</Notice>}<div className="mt-2 grid grid-cols-[1fr_auto] gap-2"><Button busy={busySub === sub.id} disabled={!!busySub || tunnel.locked || !sub.enabled} onClick={() => void refreshSubscriptions([sub])}><RefreshCw size={14} />{t("به‌روزرسانی", "Refresh")}</Button><Button tone="danger" disabled={!!busySub || tunnel.locked} onClick={() => removeSub(sub)} aria-label={t("حذف اشتراک", "Delete subscription")}><Trash2 size={15} /></Button></div></div>)}</div></>}
@@ -424,12 +438,12 @@ function Empty({ title, description, action, onAction }: { title: string; descri
   return <div className="flex flex-col items-center px-3 py-16 text-center"><div className="flex h-16 w-16 items-center justify-center rounded-full bg-teal-300/5"><Server size={29} strokeWidth={1.2} className="text-teal-200/70" /></div><h3 className="mt-5 text-[16px] font-medium">{title}</h3><p className="mt-2 max-w-[270px] text-[12px] leading-7 text-white/40">{description}</p><Button tone="primary" className="mt-5" onClick={onAction}><Plus size={16} />{action}</Button></div>;
 }
 
-function Home({ t, selected, status, busy, error, routing, onRouting, onConnect, onChoose, onAdd, onGetApp, onTest, testing, smartActive, smartText, autoOn, native }: {
+function Home({ t, selected, status, busy, error, routing, onRouting, onConnect, onChoose, onAdd, onGetApp, onTest, testing, smartActive, smartText, geo, autoOn, native }: {
   t: Text; selected: Profile | null; status: TunnelStatus; busy: boolean; error: string | null;
   routing: AppState["routing"]; onRouting: (r: AppState["routing"]) => void;
   onConnect: () => void; onChoose: () => void; onAdd: () => void; onGetApp: () => void;
   onTest: () => void; testing: boolean;
-  smartActive: boolean; smartText: string; autoOn: boolean; native: boolean;
+  smartActive: boolean; smartText: string; geo?: Profile["geo"]; autoOn: boolean; native: boolean;
 }) {
   const connected = status.available && status.state === "connected";
   const pending = smartActive || busy || status.state === "connecting" || status.state === "disconnecting";
@@ -451,6 +465,9 @@ function Home({ t, selected, status, busy, error, routing, onRouting, onConnect,
       {selected ? <ProtocolMark profile={selected} /> : <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5"><Plus size={21} className="text-teal-200/80" /></div>}
       <div className="min-w-0 flex-1"><p className="truncate text-[14px] font-medium">{selected ? selected.name : t("انتخاب سرور", "Select a server")}</p><p className={cn("mt-1 truncate text-[11px] text-white/35", selected && "latin")} dir={selected ? "ltr" : undefined}>{selected ? `${selected.host}${selected.port ? `:${selected.port}` : ""}` : t("فقط سرورهایی که خودت وارد می‌کنی", "Only servers you import")}</p></div><ChevronRight size={16} className="text-white/30 rtl:rotate-180" />
     </button>
+    {selected && <div className="mt-2 rounded-xl bg-white/[.025] px-3 py-2 text-[10px] text-white/35">
+      {geo ? <div className="grid grid-cols-2 gap-2"><span className="flex items-center gap-1.5"><Globe size={11} />{geo.country || t("کشور نامشخص", "Unknown country")}{geo.countryCode ? ` (${geo.countryCode})` : ""}</span><span className="latin flex items-center gap-1.5" dir="ltr"><MapPin size={11} />{geo.ip}</span>{geo.city && <span>{geo.city}{geo.region ? `, ${geo.region}` : ""}</span>}{geo.isp && <span className="truncate">{geo.isp}</span>}</div> : <span>{t("در حال دریافت IP و موقعیت سرور…", "Resolving server IP and location…")}</span>}
+    </div>
     <div className="mt-5 grid grid-cols-3 divide-x divide-white/6 rtl:divide-x-reverse"><Metric icon={<ArrowDown size={13} />} label={t("دریافت", "Downloaded")} value={status.downloaded == null ? "-" : formatBytes(status.downloaded)} /><Metric icon={<ArrowUp size={13} />} label={t("ارسال", "Uploaded")} value={status.uploaded == null ? "-" : formatBytes(status.uploaded)} /><Metric icon={<Timer size={13} />} label={t("مدت اتصال", "Duration")} value={connected ? formatDuration(status.elapsedMs) : "-"} /></div>
     <div className="mt-5"><p className="mb-2 flex items-center gap-1.5 text-[11px] text-white/35"><Globe size={13} />{t("مسیریابی", "Routing")}</p><div className="grid grid-cols-3 gap-2">{([{ key: "smart", label: t("هوشمند", "Smart") }, { key: "global", label: t("سراسری", "Global") }, { key: "direct", label: t("مستقیم", "Direct") }] as const).map((item) => <button key={item.key} onClick={() => onRouting(item.key)} disabled={connected || pending} className={cn("h-10 rounded-xl text-[12px] ring-1 transition disabled:opacity-60", routing === item.key ? "bg-teal-300/10 text-teal-200 ring-teal-300/20" : "bg-white/3 text-white/40 ring-white/6")}>{item.label}</button>)}</div></div>
     {routing === "direct" && <p className="mt-2 text-[11px] leading-5 text-amber-200/75">{t("حالت مستقیم: ترافیک از سرور پراکسی عبور نمی‌کند.", "Direct mode does not route traffic through the proxy server.")}</p>}

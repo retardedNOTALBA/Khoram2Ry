@@ -26,7 +26,7 @@ export function ProfileDetail({ profile, state, lang, locked, onSave, onSelect, 
       onSave({ ...parseProfile(text), id: profile.id, name: name.trim() || profile.host, subId: profile.subId, favorite: profile.favorite, createdAt: profile.createdAt });
     } catch (e) { setError(e instanceof AppError ? e : new AppError("INVALID_LINK")); }
   };
-  const rows = [[t("پروتکل", "Protocol"), profile.protocol.toUpperCase()], [t("آدرس", "Address"), `${profile.host}${profile.port ? `:${profile.port}` : ""}`], ["Transport", profile.transport || "custom"], ["Security", profile.security || "custom"], ["SNI", profile.sni || "-"], ["Flow", profile.flow || "-"], ["Fingerprint", profile.fp || "-"]];
+  const rows = [[t("پروتکل", "Protocol"), profile.protocol.toUpperCase()], [t("آدرس", "Address"), `${profile.host}${profile.port ? `:${profile.port}` : ""}`], ["Transport", profile.transport || "custom"], ["Security", profile.security || "custom"], ["SNI", profile.sni || "-"], ["Flow", profile.flow || "-"], ["Fingerprint", profile.fp || "-"], [t("IP", "IP"), profile.geo?.ip || t("در حال دریافت…", "Resolving…")], [t("کشور", "Country"), profile.geo?.country ? `${profile.geo.country}${profile.geo.countryCode ? ` (${profile.geo.countryCode})` : ""}` : "-"], [t("شهر", "City"), profile.geo?.city || "-"], [t("ارائه‌دهنده", "ISP"), profile.geo?.isp || "-"]];
   return <div className="space-y-4">
     {!supportsNative(profile) && <Notice>{errorMessage(new AppError("UNSUPPORTED_PROTOCOL"), lang)}</Notice>}
     {profile.allowInsecure && <Notice danger>{t("این کانفیگ بررسی گواهی TLS را خاموش کرده است.", "This configuration disables TLS certificate verification.")}</Notice>}

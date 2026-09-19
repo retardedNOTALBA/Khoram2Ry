@@ -84,7 +84,7 @@ def prepare(upstream: Path, web: Path):
     intent_filter = ET.SubElement(activity, "intent-filter")
     ET.SubElement(intent_filter, "action", {ANDROID + "name": "android.intent.action.MAIN"})
     ET.SubElement(intent_filter, "category", {ANDROID + "name": "android.intent.category.LAUNCHER"})
-    # NPV-style: appear in Android's Share sheet so configs land straight in the app.
+    # automatic: appear in Android's Share sheet so configs land straight in the app.
     send_filter = ET.SubElement(activity, "intent-filter")
     ET.SubElement(send_filter, "action", {ANDROID + "name": "android.intent.action.SEND"})
     ET.SubElement(send_filter, "category", {ANDROID + "name": "android.intent.category.DEFAULT"})
