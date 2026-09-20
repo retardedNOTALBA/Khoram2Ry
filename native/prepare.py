@@ -55,7 +55,7 @@ def prepare(upstream: Path, web: Path):
     gradle = app / "build.gradle.kts"
     replace_checked(gradle, "compileSdk = 35", 'compileSdk = 35\n    ndkVersion = "29.0.13113456"')
     replace_checked(gradle, 'applicationId = "com.v2ray.ang"', 'applicationId = "com.khoram2ry.app"')
-    replace_checked(gradle, 'versionName = "1.9.46"', 'versionName = "2.0.0"')
+    replace_checked(gradle, 'versionName = "1.9.46"', 'versionName = "2.0.1"')
     replace_checked(gradle, "dependencies {", 'dependencies {\n    implementation("androidx.webkit:webkit:1.12.1")')
 
     manifest = app / "src/main/AndroidManifest.xml"
@@ -84,7 +84,7 @@ def prepare(upstream: Path, web: Path):
     intent_filter = ET.SubElement(activity, "intent-filter")
     ET.SubElement(intent_filter, "action", {ANDROID + "name": "android.intent.action.MAIN"})
     ET.SubElement(intent_filter, "category", {ANDROID + "name": "android.intent.category.LAUNCHER"})
-    # NPV-style: appear in Android's Share sheet so configs land straight in the app.
+    # Appear in Android's Share sheet so configurations land straight in the app.
     send_filter = ET.SubElement(activity, "intent-filter")
     ET.SubElement(send_filter, "action", {ANDROID + "name": "android.intent.action.SEND"})
     ET.SubElement(send_filter, "category", {ANDROID + "name": "android.intent.category.DEFAULT"})
@@ -113,7 +113,7 @@ def prepare(upstream: Path, web: Path):
     notifications = java / "service/NotificationService.kt"
     replace_checked(notifications, "Intent(service, MainActivity::class.java)", "Intent(service, com.v2ray.ang.khoram.KhoramActivity::class.java)")
 
-    # Keep the namespace for upstream classes, but isolate IPC from installed v2rayNG.
+    # Keep the upstream namespace while isolating the app IPC.
     for path in (app / "src/main").rglob("*"):
         if path.suffix not in [".kt", ".xml"]:
             continue

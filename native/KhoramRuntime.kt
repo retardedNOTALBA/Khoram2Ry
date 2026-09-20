@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// Khoram2Ry integration, 2026. Uses v2rayNG's existing VPN and core lifecycle.
+// Khoram2Ry integration, 2026. Uses the bundled Android VPN/core lifecycle.
 package com.v2ray.ang.khoram
 
 import android.content.Context
@@ -24,6 +24,7 @@ import libv2ray.Libv2ray
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
+import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.net.URL
@@ -781,6 +782,19 @@ object KhoramRuntime {
             config.toString(),
             id
         )
+    }
+
+    fun resolveHost(host: String): JSONObject {
+        val clean = host.trim().removePrefix("[").removeSuffix("]")
+        if (clean.isBlank() || clean.length > 253) throw BridgeFailure("INVALID_LINK")
+        val addresses = InetAddress.getAllByName(clean)
+            .map { it.hostAddress.orEmpty() }
+            .filter { it.isNotBlank() }
+            .distinct()
+        return JSONObject()
+            .put("host", clean)
+            .put("ips", JSONArray(addresses))
+            .put("ip", addresses.firstOrNull() ?: JSONObject.NULL)
     }
 
     fun test(

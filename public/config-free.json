@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "updatedAt": "2026-09-20T06:30:00Z",
+  "configs": [
+    {
+      "id": "khoram2ry-free-1",
+      "name": "Khoram2Ry",
+      "note": "Free config",
+      "enabled": true,
+      "raw": "vless://cab50590-c61d-4bdf-ad5b-d1d554d4843e@sdauuojcpicgczvu8qg6rhn8.kouroshrzayifard.workers.dev:8443?encryption=none&security=tls&sni=sdauuojcpicgczvu8qg6rhn8.kouroshrzayifard.workers.dev&fp=randomized&alpn=http%2F1.1&insecure=0&allowInsecure=0&type=ws&host=sdauuojcpicgczvu8qg6rhn8.kouroshrzayifard.workers.dev&path=%2F3z94l8ig%3Fed%3D2560#Khoram2Ry"
+    }
+  ]
+}

@@ -11,7 +11,7 @@ export type Protocol =
 
 export type Transport = "tcp" | "ws" | "grpc" | "httpupgrade" | "splithttp" | "kcp" | "quic" | "h2";
 export type Security = "none" | "tls" | "reality" | "xtls";
-export type Tab = "home" | "servers" | "subs" | "settings";
+export type Tab = "home" | "servers" | "configfree" | "subs" | "settings";
 export type Lang = "fa" | "en";
 export type Routing = "smart" | "global" | "direct";
 export type Theme = "night" | "oled";

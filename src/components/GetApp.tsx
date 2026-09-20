@@ -23,7 +23,7 @@ export function GetApp({ lang, native, onError }: { lang: Lang; native: boolean;
     </div>
 
     <div className="rounded-2xl bg-teal-300/6 p-4 ring-1 ring-teal-300/15">
-      <p className="flex items-center gap-2 text-[13px] font-medium text-teal-100"><Sparkles size={15} className="text-teal-300" />{t("مثل NPV Tunnel: فقط یه دکمه", "NPV Tunnel style: just one button")}</p>
+      <p className="flex items-center gap-2 text-[13px] font-medium text-teal-100"><Sparkles size={15} className="text-teal-300" />{t("اتصال هوشمند با یک دکمه", "One-button smart connection")}</p>
       <div className="mt-3 space-y-2.5">
         {auto.map(({ icon: Icon, fa, en }) => (
           <p key={en} className="flex items-center gap-2.5 text-[11px] text-white/60">
@@ -33,7 +33,7 @@ export function GetApp({ lang, native, onError }: { lang: Lang; native: boolean;
         ))}
       </div>
       <p className="mt-3 border-t border-white/6 pt-3 text-[11px] leading-6 text-white/45">
-        {t("نیازی به نصب v2rayNG یا اپ دوم نیست. کانفیگ را از تلگرام Share کن — خودش وارد اپ می‌شود.", "No second app needed. Share a config from Telegram and it lands straight in the app.")}
+        {t("نیازی به نصب اپ دوم نیست. کانفیگ را از تلگرام Share کن — خودش وارد برنامه می‌شود.", "No second app needed. Share a config from Telegram and it lands straight in the app.")}
       </p>
     </div>
 

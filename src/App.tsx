@@ -14,6 +14,8 @@ import { ConfigEditor, SubscriptionForm } from "./components/ConfigEditor";
 import { ProfileDetail } from "./components/ProfileDetail";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { GetApp } from "./components/GetApp";
+import { ConfigFree } from "./components/ConfigFree";
+import { APP_UPDATE_URL, APP_VERSION, APP_VERSION_URL, compareVersions } from "./lib/appVersion";
 
 type Sheet = "import" | "subscription" | "detail" | "logs" | "getapp" | "confirm" | null;
 
@@ -36,6 +38,9 @@ export default function App() {
   const [confirmation, setConfirmation] = useState<{ title: string; hint?: string; accept: () => Promise<void> | void } | null>(null);
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [confirmError, setConfirmError] = useState<unknown>(null);
+  const [updateInfo, setUpdateInfo] = useState<{ latestVersion: string; minVersion?: string; updateUrl?: string; message?: string } | null>(null);
+  const [updateChecking, setUpdateChecking] = useState(true);
+  const [resolvedIp, setResolvedIp] = useState("");
   const backupInput = useRef<HTMLInputElement>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const subscriptionBusy = useRef(false);
@@ -43,7 +48,7 @@ export default function App() {
   const cancelTests = useRef(false);
   const autoUpdated = useRef(false);
   const alive = useRef(true);
-  // Smart auto-connect (NPV-style): update → fastest → connect → fallback → reconnect.
+  // Smart auto-connect: update → fastest → connect → fallback → reconnect.
   const [smartActive, setSmartActive] = useState(false);
   const [smartPhase, setSmartPhase] = useState("");
   const [smartDetail, setSmartDetail] = useState("");
@@ -57,6 +62,15 @@ export default function App() {
   const t = textFor(state.lang);
   const selected = state.profiles.find((p) => p.id === state.selectedId) || null;
   const activeDetail = state.profiles.find((p) => p.id === detailId);
+  useEffect(() => {
+    setResolvedIp("");
+    if (!selected?.host || !hasNativeCore()) return;
+    let cancelled = false;
+    void nativeRequest<{ ip: string | null }>("resolveHost", { host: selected.host }, 10_000)
+      .then((result) => { if (!cancelled) setResolvedIp(result.ip || ""); })
+      .catch(() => { if (!cancelled) setResolvedIp(""); });
+    return () => { cancelled = true; };
+  }, [selected?.id, selected?.host]);
   const closeSheet = useCallback(() => setSheet(null), []);
 
   const notify = useCallback((message: string) => {
@@ -70,6 +84,28 @@ export default function App() {
   useEffect(() => {
     try { saveState(state); setStorageError(null); } catch (e) { setStorageError(e); }
   }, [state]);
+  useEffect(() => {
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const response = await fetch(`${APP_VERSION_URL}?v=${Date.now()}`, { cache: "no-store", headers: { Accept: "application/json" } });
+        if (!response.ok) throw new Error("UPDATE_CHECK_FAILED");
+        const remote = await response.json() as { latestVersion?: string; minVersion?: string; updateUrl?: string; message?: string };
+        if (!cancelled && remote.latestVersion && compareVersions(APP_VERSION, remote.latestVersion) < 0) setUpdateInfo({
+          latestVersion: remote.latestVersion,
+          minVersion: remote.minVersion,
+          updateUrl: remote.updateUrl || APP_UPDATE_URL,
+          message: remote.message,
+        });
+      } catch {
+        // A temporary update-server failure must not lock users out of the app.
+      } finally {
+        if (!cancelled) setUpdateChecking(false);
+      }
+    };
+    void check();
+    return () => { cancelled = true; };
+  }, []);
   useEffect(() => { document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === "fa" ? "rtl" : "ltr"; }, [state.lang]);
   useEffect(() => {
     alive.current = true;
@@ -278,7 +314,7 @@ export default function App() {
   }, [smartActive, tunnel, busySub, refreshSubscriptions, testProfile, fail, log, notify, t]);
 
   const toggleConnection = async () => {
-    // Tapping while smart-connect runs cancels it (like NPV Tunnel).
+    // Tapping while smart-connect runs cancels the current connection workflow.
     if (smartActive) { smartCancel.current = true; return; }
     if (tunnel.busy) return;
     if (tunnel.status.state === "connected" || tunnel.status.state === "connecting") {
@@ -365,7 +401,7 @@ export default function App() {
     },
   });
 
-  const titles = { import: t("افزودن کانفیگ", "Import configuration"), subscription: t("مدیریت اشتراک", "Subscription"), detail: activeDetail?.name || t("جزئیات سرور", "Server details"), logs: t("گزارش فعالیت", "Activity log"), getapp: t("اتصال واقعی در اندروید", "Native Android connection"), confirm: t("تأیید عملیات", "Confirm action") };
+  const titles = { import: t("افزودن کانفیگ", "Import configuration"), configfree: t("Config Free", "Config Free"), subscription: t("مدیریت اشتراک", "Subscription"), detail: activeDetail?.name || t("جزئیات سرور", "Server details"), logs: t("گزارش فعالیت", "Activity log"), getapp: t("اتصال واقعی در اندروید", "Native Android connection"), confirm: t("تأیید عملیات", "Confirm action") };
 
   return <div className="relative flex min-h-dvh items-center justify-center bg-[#05060a] lg:p-8">
     <div className={cn("relative flex h-dvh w-full max-w-[430px] flex-col overflow-hidden lg:h-[min(860px,calc(100dvh-64px))] lg:rounded-[36px] lg:shadow-[0_30px_110px_#0008] lg:ring-1 lg:ring-white/10", state.theme === "oled" ? "bg-black" : "bg-[#07080c]")}>
@@ -375,13 +411,14 @@ export default function App() {
       {storageError != null && <div className="px-5 pb-2"><Notice danger>{errorMessage(storageError, state.lang)}</Notice></div>}
       <main inert={sheet !== null} className="relative z-10 min-h-0 flex-1 overflow-y-auto scroll-thin">
         <div key={tab} className="animate-fade-up">
-          {tab === "home" && <Home t={t} selected={selected} status={tunnel.status} busy={tunnel.busy} error={tunnel.error ? errorMessage(tunnel.error, state.lang) : null} routing={state.routing} onRouting={(routing) => { try { requireIdle(); patch({ routing }); } catch (e) { fail(e); } }} onConnect={() => void toggleConnection()} onChoose={() => setTab("servers")} onAdd={() => setSheet("import")} onGetApp={() => setSheet("getapp")} onTest={() => { if (selected) void testProfile(selected).catch(fail); }} testing={!!testingId} smartActive={smartActive} smartText={smartActive && smartPhase ? smartStepText(state.lang, smartPhase, smartDetail) : ""} autoOn={state.autoFastest || state.autoReconnect} native={hasNativeCore()} />}
+          {tab === "home" && <Home t={t} selected={selected} status={tunnel.status} busy={tunnel.busy} error={tunnel.error ? errorMessage(tunnel.error, state.lang) : null} routing={state.routing} onRouting={(routing) => { try { requireIdle(); patch({ routing }); } catch (e) { fail(e); } }} onConnect={() => void toggleConnection()} onChoose={() => setTab("servers")} onConfigFree={() => setTab("configfree")} resolvedIp={resolvedIp} onAdd={() => setSheet("import")} onGetApp={() => setSheet("getapp")} onTest={() => { if (selected) void testProfile(selected).catch(fail); }} testing={!!testingId} smartActive={smartActive} smartText={smartActive && smartPhase ? smartStepText(state.lang, smartPhase, smartDetail) : ""} autoOn={state.autoFastest || state.autoReconnect} native={hasNativeCore()} />}
           {tab === "servers" && <div className="px-5 pb-6">
             <div className="flex items-center justify-between"><div><h2 className="text-[19px] font-semibold">{t("سرورهای من", "My servers")}</h2><p className="mt-1 text-[11px] text-white/40">{state.profiles.length} {t("کانفیگ شخصی", "personal configurations")}</p></div><Button tone="primary" aria-label={titles.import} className="h-10 min-h-10 w-10 rounded-full px-0" onClick={() => setSheet("import")}><Plus size={18} /></Button></div>
             {state.profiles.length > 0 && <><div className="mt-4 flex items-center gap-2 rounded-xl bg-white/5 px-3"><Search size={16} className="text-white/35" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("جستجوی نام، آدرس یا پروتکل", "Search name, address or protocol")} aria-label={t("جستجوی سرور", "Search servers")} className="h-11 min-w-0 flex-1 bg-transparent text-[12px] placeholder:text-white/30" /></div><div className="mt-3 grid grid-cols-2 gap-2"><Choice label={t("نمایش", "Show")} value={filter} onChange={setFilter} options={[{ value: "all", label: t("همه سرورها", "All servers") }, { value: "fav", label: t("علاقه‌مندی‌ها", "Favorites") }, ...Array.from(new Set(state.profiles.map((p) => p.protocol))).map((value) => ({ value, label: value.toUpperCase() }))]} /><Choice label={t("مرتب‌سازی", "Sort by")} value={sort} onChange={setSort} options={[{ value: "added", label: t("جدیدترین", "Newest") }, { value: "latency", label: t("تأخیر واقعی", "Measured latency") }, { value: "name", label: t("نام", "Name") }]} /></div><div className="my-3 flex items-center justify-between gap-2"><Button disabled={tunnel.locked || !filtered.length || (!!testingId && !testProgress)} onClick={() => void testAll()} className="px-3 text-[11px]"><Zap size={14} />{testProgress ? `${t("توقف", "Cancel")} ${testProgress}` : t("تست واقعی همه", "Test all through proxy")}</Button><button aria-label={t("خروجی سرورهای فیلترشده", "Export filtered servers")} disabled={!filtered.length} onClick={() => void exportText(filtered.map((p) => p.raw).join("\n"), "khoram-servers.txt").catch(fail)} className="flex h-10 w-10 items-center justify-center text-white/50"><Download size={16} /></button></div></>}
             {state.profiles.length === 0 ? <Empty title={t("سرور خودت را اضافه کن", "Bring your own server")} description={t("هیچ سروری از قبل اضافه نشده. لینک، ساب‌لینک یا کانفیگ خودت را وارد کن.", "No servers are preloaded. Import your own link, subscription or configuration.")} action={t("افزودن اولین کانفیگ", "Add your first configuration")} onAction={() => setSheet("import")} /> : !filtered.length ? <p className="py-16 text-center text-[12px] text-white/40">{t("سروری با این فیلتر پیدا نشد.", "No servers match these filters.")}</p> : <div className="space-y-2">{filtered.map((p) => <div key={p.id} className={cn("flex items-center gap-2 rounded-2xl p-3 ring-1 transition", state.selectedId === p.id ? "bg-teal-300/7 ring-teal-300/25" : "bg-white/3 ring-white/6")}>
               <button className="flex min-w-0 flex-1 items-center gap-3 text-start" onClick={() => choose(p.id)} aria-pressed={state.selectedId === p.id}><ProtocolMark profile={p} /><div className="min-w-0 flex-1"><p className="truncate text-[13px] font-medium">{p.name}</p><p className="latin mt-1 truncate text-[10px] text-white/40" dir="ltr">{p.protocol.toUpperCase()} / {p.host}</p></div></button><div className="flex flex-col items-end"><span className={cn("latin text-[11px]", latencyColor(p.latency))}>{testingId === p.id ? <Loader2 size={13} className="animate-spin" /> : p.latency != null ? `${p.latency} ms` : p.testedAt ? t("ناموفق", "Failed") : "-"}</span><div className="mt-1 flex"><button aria-label={t("علاقه‌مندی", "Favorite")} aria-pressed={!!p.favorite} onClick={() => setState((old) => ({ ...old, profiles: old.profiles.map((item) => item.id === p.id ? { ...item, favorite: !item.favorite } : item) }))} className="p-2"><Star size={14} className={p.favorite ? "fill-amber-300 text-amber-300" : "text-white/25"} /></button><button aria-label={t("جزئیات و ویرایش", "Details and editing")} onClick={() => { setDetailId(p.id); setSheet("detail"); }} className="p-2"><ChevronRight size={15} className="text-white/40 rtl:rotate-180" /></button></div></div></div>)}</div>}
           </div>}
+          {tab === "configfree" && <div className="px-5 pb-7"><ConfigFree lang={state.lang} t={t} installed={state.profiles} onAdd={(profile) => addProfiles([profile])} /></div>}
           {tab === "subs" && <div className="px-5 pb-7"><div className="flex items-center justify-between"><div><h2 className="text-[19px] font-semibold">{t("اشتراک‌های من", "My subscriptions")}</h2><p className="mt-1 text-[11px] text-white/40">{t("سرورهای خودت، همیشه به‌روز", "Your servers, kept up to date")}</p></div><Button tone="primary" className="h-10 min-h-10 w-10 rounded-full px-0" aria-label={t("افزودن اشتراک", "Add subscription")} onClick={() => { setEditingSub(undefined); setIncomingUrl(""); setSheet("subscription"); }}><Plus size={18} /></Button></div>
             {!state.subs.length ? <Empty title={t("ساب‌لینکی اضافه نشده", "No subscriptions yet")} description={t("آدرس اشتراکی که از ارائه‌دهنده‌ات داری را وارد کن.", "Add the subscription URL from your provider.")} action={t("افزودن ساب‌لینک", "Add subscription")} onAction={() => { setEditingSub(undefined); setIncomingUrl(""); setSheet("subscription"); }} /> : <><Button className="my-4 w-full" busy={!!busySub} disabled={tunnel.locked} onClick={() => void refreshSubscriptions(state.subs)}><RefreshCw size={15} />{t("به‌روزرسانی همه", "Refresh all")}</Button><div className="space-y-3">{state.subs.map((sub) => <div key={sub.id} className="rounded-2xl bg-white/3 p-4 ring-1 ring-white/7"><div className="flex items-start justify-between gap-3"><button className="min-w-0 text-start" onClick={() => { setEditingSub(sub); setSheet("subscription"); }}><p className="truncate text-[14px] font-medium">{sub.name}</p><p className="latin mt-1 truncate text-[11px] text-white/35" dir="ltr">{safeOrigin(sub.url)}</p></button><Link2 size={18} className="mt-1 shrink-0 text-amber-200/65" /></div><p className="mt-3 text-[11px] text-white/40">{state.profiles.filter((p) => p.subId === sub.id).length} {t("سرور", "servers")} / {sub.lastUpdated ? new Date(sub.lastUpdated).toLocaleString(state.lang === "fa" ? "fa-IR" : "en-US", { dateStyle: "short", timeStyle: "short" }) : t("هنوز دریافت نشده", "Not fetched yet")}</p><Toggle label={t("فعال", "Enabled")} value={sub.enabled} disabled={!!busySub || tunnel.locked} onChange={(enabled) => patch({ subs: state.subs.map((s) => s.id === sub.id ? { ...s, enabled } : s) })} />{sub.error && <Notice danger>{sub.error}</Notice>}<div className="mt-2 grid grid-cols-[1fr_auto] gap-2"><Button busy={busySub === sub.id} disabled={!!busySub || tunnel.locked || !sub.enabled} onClick={() => void refreshSubscriptions([sub])}><RefreshCw size={14} />{t("به‌روزرسانی", "Refresh")}</Button><Button tone="danger" disabled={!!busySub || tunnel.locked} onClick={() => removeSub(sub)} aria-label={t("حذف اشتراک", "Delete subscription")}><Trash2 size={15} /></Button></div></div>)}</div></>}
             <p className="mt-5 flex gap-2 text-[11px] leading-6 text-white/35"><Shield size={15} className="mt-1 shrink-0" />{t("ساب‌لینک شما خصوصی است و از طریق سرویس واسطه دریافت نمی‌شود.", "Your subscription URL stays private. No third-party relay is used.")}</p>
@@ -389,7 +426,7 @@ export default function App() {
           {tab === "settings" && <SettingsPanel state={state} locked={tunnel.locked || !!testingId || !!busySub} onPatch={patch} onBackup={() => void downloadBackup(state).catch(fail)} onRestore={() => backupInput.current?.click()} onGetApp={() => setSheet("getapp")} onNativeTools={(screen) => void nativeRequest("openScreen", { screen }).catch(fail)} onClear={() => confirm({ title: t("همه سرورها و اشتراک‌ها پاک شوند؟", "Clear all profiles and subscriptions?"), hint: t("این کار قابل برگشت نیست؛ ابتدا پشتیبان بگیر.", "This cannot be undone. Export a backup first."), accept: async () => { requireIdle(); if (hasNativeCore()) await nativeRequest("clearProfiles"); setState({ ...defaultState(), lang: state.lang, theme: state.theme }); setLogs([]); } })} />}
         </div>
       </main>
-      <nav inert={sheet !== null} aria-label={t("منوی اصلی", "Main navigation")} className="relative z-10 grid shrink-0 grid-cols-4 border-t border-white/6 bg-[#0b0d12]/90 pt-2 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur-xl">{([{ id: "home", icon: House, label: t("خانه", "Home") }, { id: "servers", icon: Server, label: t("سرورها", "Servers") }, { id: "subs", icon: Link2, label: t("اشتراک", "Subscriptions") }, { id: "settings", icon: Settings2, label: t("تنظیمات", "Settings") }] as const).map(({ id, icon: Icon, label }) => <button key={id} onClick={() => setTab(id)} aria-current={tab === id ? "page" : undefined} className={cn("flex flex-col items-center gap-1.5 py-2 text-[10px] transition", tab === id ? "text-teal-200" : "text-white/35")}><Icon size={19} strokeWidth={tab === id ? 2 : 1.6} />{label}</button>)}</nav>
+      <nav inert={sheet !== null} aria-label={t("منوی اصلی", "Main navigation")} className="relative z-10 grid shrink-0 grid-cols-5 border-t border-white/6 bg-[#0b0d12]/90 pt-2 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur-xl">{([{ id: "home", icon: House, label: t("خانه", "Home") }, { id: "servers", icon: Server, label: t("سرورها", "Servers") }, { id: "configfree", icon: Download, label: "Config Free" }, { id: "subs", icon: Link2, label: t("اشتراک", "Subscriptions") }, { id: "settings", icon: Settings2, label: t("تنظیمات", "Settings") }] as const).map(({ id, icon: Icon, label }) => <button key={id} onClick={() => setTab(id)} aria-current={tab === id ? "page" : undefined} className={cn("flex flex-col items-center gap-1.5 py-2 text-[10px] transition", tab === id ? "text-teal-200" : "text-white/35")}><Icon size={19} strokeWidth={tab === id ? 2 : 1.6} />{label}</button>)}</nav>
       <input ref={backupInput} type="file" className="hidden" accept=".json,application/json" onChange={async (event) => {
         const file = event.target.files?.[0]; event.target.value = ""; if (!file) return;
         try { requireIdle(); if (file.size > MAX_CONFIG_SIZE) throw new AppError("TOO_LARGE"); const restored = restoreBackup(await file.text()); confirm({ title: t("اطلاعات فعلی با پشتیبان جایگزین شود؟", "Replace current data with this backup?"), hint: `${restored.profiles.length} ${t("سرور", "servers")}`, accept: async () => { requireIdle(); if (hasNativeCore()) await nativeRequest("clearProfiles"); setState(restored); notify(t("پشتیبان بازیابی شد", "Backup restored")); } }); } catch (e) { fail(e); }
@@ -410,6 +447,17 @@ export default function App() {
         {sheet === "confirm" && confirmation && <div className="space-y-4"><h3 className="text-[15px]">{confirmation.title}</h3>{confirmation.hint && <p className="text-[12px] leading-6 text-white/45">{confirmation.hint}</p>}{confirmError != null && <Notice danger>{errorMessage(confirmError, state.lang)}</Notice>}<div className="grid grid-cols-2 gap-3"><Button onClick={closeSheet} disabled={confirmBusy}>{t("انصراف", "Cancel")}</Button><Button tone="danger" busy={confirmBusy} onClick={async () => { if (confirmBusy) return; setConfirmBusy(true); try { await confirmation.accept(); closeSheet(); } catch (e) { setConfirmError(e); } finally { setConfirmBusy(false); } }}>{t("تأیید", "Confirm")}</Button></div></div>}
       </Dialog>}
       {toast && <div className="pointer-events-none absolute inset-x-0 bottom-24 z-50 flex justify-center px-5" role="status"><div className="animate-toast max-w-full rounded-2xl bg-white/95 px-4 py-3 text-[12px] leading-6 text-zinc-950 shadow-xl">{toast}</div></div>}
+      {!updateChecking && updateInfo && <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 p-5 backdrop-blur-md">
+        <div className="w-full max-w-[360px] rounded-[28px] bg-[#151820] p-6 ring-1 ring-teal-300/15 shadow-2xl">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-300/10"><RefreshCw size={25} className="text-teal-200" /></div>
+          <h2 className="mt-5 text-center text-[19px] font-semibold">{t("نیاز به آپدیت", "You need update")}</h2>
+          <p className="mt-3 text-center text-[12px] leading-7 text-white/45">{updateInfo.message || t("نسخه جدید برنامه منتشر شده است. برای ادامه، برنامه را به‌روز کن.", "A new version is available. Update the app to continue.")}</p>
+          <div className="mt-4 rounded-2xl bg-white/4 p-3 text-center text-[11px] text-white/45">
+            <span className="latin">v{APP_VERSION}</span><span className="mx-2">→</span><span className="latin text-teal-200">v{updateInfo.latestVersion}</span>
+          </div>
+          <a href={updateInfo.updateUrl || APP_UPDATE_URL} target="_blank" rel="noreferrer" className="mt-5 flex h-11 items-center justify-center rounded-xl bg-teal-300 px-4 text-[12px] font-semibold text-zinc-950">{t("دریافت آپدیت", "Get update")}</a>
+        </div>
+      </div>}
     </div>
   </div>;
 }
@@ -424,12 +472,12 @@ function Empty({ title, description, action, onAction }: { title: string; descri
   return <div className="flex flex-col items-center px-3 py-16 text-center"><div className="flex h-16 w-16 items-center justify-center rounded-full bg-teal-300/5"><Server size={29} strokeWidth={1.2} className="text-teal-200/70" /></div><h3 className="mt-5 text-[16px] font-medium">{title}</h3><p className="mt-2 max-w-[270px] text-[12px] leading-7 text-white/40">{description}</p><Button tone="primary" className="mt-5" onClick={onAction}><Plus size={16} />{action}</Button></div>;
 }
 
-function Home({ t, selected, status, busy, error, routing, onRouting, onConnect, onChoose, onAdd, onGetApp, onTest, testing, smartActive, smartText, autoOn, native }: {
+function Home({ t, selected, status, busy, error, routing, onRouting, onConnect, onChoose, onConfigFree, onAdd, onGetApp, onTest, testing, smartActive, smartText, autoOn, native, resolvedIp }: {
   t: Text; selected: Profile | null; status: TunnelStatus; busy: boolean; error: string | null;
   routing: AppState["routing"]; onRouting: (r: AppState["routing"]) => void;
-  onConnect: () => void; onChoose: () => void; onAdd: () => void; onGetApp: () => void;
+  onConnect: () => void; onChoose: () => void; onConfigFree: () => void; onAdd: () => void; onGetApp: () => void;
   onTest: () => void; testing: boolean;
-  smartActive: boolean; smartText: string; autoOn: boolean; native: boolean;
+  smartActive: boolean; smartText: string; autoOn: boolean; native: boolean; resolvedIp: string;
 }) {
   const connected = status.available && status.state === "connected";
   const pending = smartActive || busy || status.state === "connecting" || status.state === "disconnecting";
@@ -451,7 +499,13 @@ function Home({ t, selected, status, busy, error, routing, onRouting, onConnect,
       {selected ? <ProtocolMark profile={selected} /> : <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5"><Plus size={21} className="text-teal-200/80" /></div>}
       <div className="min-w-0 flex-1"><p className="truncate text-[14px] font-medium">{selected ? selected.name : t("انتخاب سرور", "Select a server")}</p><p className={cn("mt-1 truncate text-[11px] text-white/35", selected && "latin")} dir={selected ? "ltr" : undefined}>{selected ? `${selected.host}${selected.port ? `:${selected.port}` : ""}` : t("فقط سرورهایی که خودت وارد می‌کنی", "Only servers you import")}</p></div><ChevronRight size={16} className="text-white/30 rtl:rotate-180" />
     </button>
+    <button onClick={() => onConfigFree()} className="mt-3 flex items-center gap-3 rounded-2xl bg-teal-300/5 p-3.5 text-start ring-1 ring-teal-300/10">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-300/10"><Download size={18} className="text-teal-200" /></div>
+      <div className="min-w-0 flex-1"><p className="text-[13px] font-medium text-teal-100">Config Free</p><p className="mt-1 text-[10px] text-white/35">{t("دریافت کانفیگ‌های رایگان از مخزن مرکزی", "Get free configurations from the central repository")}</p></div>
+      <ChevronRight size={16} className="text-white/30 rtl:rotate-180" />
+    </button>
     <div className="mt-5 grid grid-cols-3 divide-x divide-white/6 rtl:divide-x-reverse"><Metric icon={<ArrowDown size={13} />} label={t("دریافت", "Downloaded")} value={status.downloaded == null ? "-" : formatBytes(status.downloaded)} /><Metric icon={<ArrowUp size={13} />} label={t("ارسال", "Uploaded")} value={status.uploaded == null ? "-" : formatBytes(status.uploaded)} /><Metric icon={<Timer size={13} />} label={t("مدت اتصال", "Duration")} value={connected ? formatDuration(status.elapsedMs) : "-"} /></div>
+     {selected && <div className="mt-4 rounded-xl bg-white/3 px-3 py-2.5 ring-1 ring-white/6"><p className="text-[10px] text-white/30">{t("آدرس سرور", "Server address")}</p><p className="latin mt-1 truncate text-[12px] text-white/70" dir="ltr">{selected.host}{selected.port ? `:${selected.port}` : ""}</p>{resolvedIp && <p className="latin mt-1 truncate text-[10px] text-teal-200/70" dir="ltr">IP: {resolvedIp}</p>}{connected && <p className="mt-1 text-[10px] text-teal-200/60">{t("اتصال فعال روی همین endpoint است.", "The active connection is using this endpoint.")}</p>}</div>}
     <div className="mt-5"><p className="mb-2 flex items-center gap-1.5 text-[11px] text-white/35"><Globe size={13} />{t("مسیریابی", "Routing")}</p><div className="grid grid-cols-3 gap-2">{([{ key: "smart", label: t("هوشمند", "Smart") }, { key: "global", label: t("سراسری", "Global") }, { key: "direct", label: t("مستقیم", "Direct") }] as const).map((item) => <button key={item.key} onClick={() => onRouting(item.key)} disabled={connected || pending} className={cn("h-10 rounded-xl text-[12px] ring-1 transition disabled:opacity-60", routing === item.key ? "bg-teal-300/10 text-teal-200 ring-teal-300/20" : "bg-white/3 text-white/40 ring-white/6")}>{item.label}</button>)}</div></div>
     {routing === "direct" && <p className="mt-2 text-[11px] leading-5 text-amber-200/75">{t("حالت مستقیم: ترافیک از سرور پراکسی عبور نمی‌کند.", "Direct mode does not route traffic through the proxy server.")}</p>}
     {error && <div className="mt-4"><Notice danger>{error}</Notice></div>}

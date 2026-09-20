@@ -22,7 +22,7 @@ export const defaultState = (): AppState => ({
   fragment: false,
   advanced: defaultAdvanced(),
   onboarded: true,
-  // NPV-style: everything automatic out of the box. User can turn off in Settings.
+  // Smart connection defaults are enabled; users can turn them off in Settings.
   autoConnect: true,
   autoReconnect: true,
   autoFastest: true,

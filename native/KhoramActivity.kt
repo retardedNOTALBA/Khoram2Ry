@@ -522,6 +522,13 @@ class KhoramActivity : AppCompatActivity() {
                             )
                         }
 
+                        "resolveHost" ->
+                            background(id) {
+                                KhoramRuntime.resolveHost(
+                                    data.getString("host")
+                                )
+                            }
+
                         "test" ->
                             background(id) {
                                 KhoramRuntime.test(
