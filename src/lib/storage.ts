@@ -22,7 +22,7 @@ export const defaultState = (): AppState => ({
   fragment: false,
   advanced: defaultAdvanced(),
   onboarded: true,
-  // automatic: everything automatic out of the box. User can turn off in Settings.
+  // NPV-style: everything automatic out of the box. User can turn off in Settings.
   autoConnect: true,
   autoReconnect: true,
   autoFastest: true,
@@ -92,7 +92,7 @@ export function restoreBackup(text: string): AppState {
     const profiles: Profile[] = data.profiles.map((p: Profile) => {
       if (typeof p.id !== "string" || !/^[A-Za-z0-9-]{1,100}$/.test(p.id) || ids.has(p.id) || typeof p.raw !== "string") throw new Error();
       ids.add(p.id);
-      return { ...parseProfile(p.raw), id: p.id, name: typeof p.name === "string" ? p.name : parseProfile(p.raw).name, favorite: p.favorite === true, subId: subs.some((s) => s.id === p.subId) ? p.subId : undefined, geo: p.geo };
+      return { ...parseProfile(p.raw), id: p.id, name: typeof p.name === "string" ? p.name : parseProfile(p.raw).name, favorite: p.favorite === true, subId: subs.some((s) => s.id === p.subId) ? p.subId : undefined };
     });
     const advanced = { ...defaultAdvanced(), ...data.advanced };
     if (!validAdvanced(advanced)) throw new Error();

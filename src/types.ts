@@ -43,18 +43,6 @@ export interface Profile {
   testedAt?: number;
   favorite?: boolean;
   createdAt: number;
-  geo?: ServerGeo;
-}
-
-export interface ServerGeo {
-  ip: string;
-  country?: string;
-  countryCode?: string;
-  city?: string;
-  region?: string;
-  isp?: string;
-  asn?: string;
-  checkedAt: number;
 }
 
 export interface Subscription {

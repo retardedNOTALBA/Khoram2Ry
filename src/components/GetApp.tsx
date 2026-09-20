@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Apple, Check, Download, RefreshCw, ShieldCheck, Smartphone, Sparkles, Zap } from "lucide-react";
+import { Check, Download, RefreshCw, ShieldCheck, Smartphone, Sparkles, Zap } from "lucide-react";
 import type { Lang } from "../types";
 import { buildAndroidZip, saveBlob } from "../lib/apkProject";
 import { Button, Notice, textFor } from "./ui";
@@ -23,7 +23,7 @@ export function GetApp({ lang, native, onError }: { lang: Lang; native: boolean;
     </div>
 
     <div className="rounded-2xl bg-teal-300/6 p-4 ring-1 ring-teal-300/15">
-      <p className="flex items-center gap-2 text-[13px] font-medium text-teal-100"><Sparkles size={15} className="text-teal-300" />{t("مثل Khoram2Ry: فقط یه دکمه", "Khoram2Ry style: just one button")}</p>
+      <p className="flex items-center gap-2 text-[13px] font-medium text-teal-100"><Sparkles size={15} className="text-teal-300" />{t("مثل NPV Tunnel: فقط یه دکمه", "NPV Tunnel style: just one button")}</p>
       <div className="mt-3 space-y-2.5">
         {auto.map(({ icon: Icon, fa, en }) => (
           <p key={en} className="flex items-center gap-2.5 text-[11px] text-white/60">
@@ -40,12 +40,6 @@ export function GetApp({ lang, native, onError }: { lang: Lang; native: boolean;
     {native
       ? <p className="flex items-center gap-2 text-[12px] text-teal-200"><Check size={16} />{t("این نسخه اندروید است؛ دکمه پاور همان اتصال واقعی است.", "This is the Android build; the power button is the real connection.")}</p>
       : <Notice>{t("الان داخل مرورگر هستی؛ مرورگر نمی‌تواند VPN دستگاه را روشن کند. برای اتصال واقعی، همین پروژه را به APK تبدیل و نصب کن.", "You are in a browser, which cannot start a device VPN. Turn this project into the APK and install it for real connections.")}</Notice>}
-
-    {!native && <section className="space-y-3 border-t border-white/8 pt-4">
-      <div className="flex items-center gap-2 text-[13px] font-medium"><Apple size={16} />{t("نسخه iOS", "iOS version")}</div>
-      <p className="text-[11px] leading-6 text-white/40">{t("پروژه iOS داخل سورس قرار داده شده و رابط برنامه را با SwiftUI/WKWebView می‌آورد. برای VPN واقعی، باید هسته Xray را به Packet Tunnel اپل لینک و با Network Extension امضا کنی.", "The iOS source is included with a SwiftUI/WKWebView shell. A real VPN requires linking an Xray core into the Packet Tunnel and signing the Network Extension with Apple.")}</p>
-      <Button className="w-full" onClick={() => window.open("https://developer.apple.com/xcode/", "_blank", "noopener,noreferrer")}><Apple size={15} />{t("راهنمای ساخت iOS در Xcode", "Build iOS in Xcode")}</Button>
-    </section>}
 
     {!native && <section className="space-y-3 border-t border-white/8 pt-4">
       <h4 className="text-[13px] font-medium">{t("قدم ۱ از ۳: دریافت پروژه", "Step 1 of 3: get the project")}</h4>
