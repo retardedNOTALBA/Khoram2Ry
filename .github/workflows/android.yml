@@ -1,119 +1,224 @@
-name: Build Khoram2Ry Native APK
+name: Build Khoram2Ry Android
 
 on:
   workflow_dispatch:
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - master
 
 permissions:
   contents: write
 
 jobs:
   android:
+    name: Build Android APK
     runs-on: ubuntu-latest
     timeout-minutes: 60
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          node-version: '22'
+          submodules: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
       - name: Install web dependencies
-        run: npm install --no-audit --no-fund
-      - name: Check types and configuration tests
-        run: |
-          npx tsc --noEmit
-          npx tsx --test tests/*.test.ts
-      - name: Build the local web interface
+        run: npm ci --no-audit --no-fund
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        run: npx tsx --test tests/*.test.ts
+
+      - name: Build web interface
         run: npm run build
 
-      - name: Fetch pinned native service and core sources
+      - name: Fetch pinned v2rayNG source
         run: |
-          git init build/upstream
-          git -C build/upstream remote add origin https://github.com/2dust/v2rayNG.git
-          git -C build/upstream fetch --depth 1 origin 5b9f24c1f0799b19f6bf43fa8d4b325df8ee137f
-          git -C build/upstream checkout --detach FETCH_HEAD
-          git -C build/upstream submodule update --init --recursive AndroidLibXrayLite badvpn libancillary
-          test "$(git -C build/upstream/AndroidLibXrayLite rev-parse HEAD)" = "2715a3b110f64e039a4b8d2c8ca0cb5a9a6b0958"
+          mkdir -p build
+          git clone --depth 1 https://github.com/2dust/v2rayNG.git build/upstream
+          cd build/upstream
 
-      - uses: actions/setup-java@v4
+          git fetch --depth 1 origin 5b9f24c1f0799b19f6bf43fa8d4b325df8ee137f
+          git checkout --detach 5b9f24c1f0799b19f6bf43fa8d4b325df8ee137f
+
+          git submodule update --init --recursive \
+            AndroidLibXrayLite \
+            badvpn \
+            libancillary
+
+      - name: Verify AndroidLibXrayLite version
+        run: |
+          EXPECTED="2715a3b110f64e039a4b8d2c8ca0cb5a9a6b0958"
+          ACTUAL="$(git -C build/upstream/AndroidLibXrayLite rev-parse HEAD)"
+
+          echo "Expected: $EXPECTED"
+          echo "Actual:   $ACTUAL"
+
+          test "$ACTUAL" = "$EXPECTED"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
 
-      - uses: android-actions/setup-android@v3
-        with:
-          packages: 'platforms;android-35 build-tools;35.0.0 platform-tools'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Install the upstream-compatible NDK
+      - name: Install Android SDK packages
         run: |
-          sdkmanager --channel=3 "ndk;29.0.13113456"
+          sdkmanager --install \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0" \
+            "ndk;29.0.13113456"
+
+      - name: Configure Android NDK
+        run: |
           echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.13113456" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.13113456" >> "$GITHUB_ENV"
 
-      - uses: actions/setup-go@v5
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version-file: build/upstream/AndroidLibXrayLite/go.mod
           cache: false
 
-      - name: Compile the native TUN packet adapter
+      - name: Compile TUN packet adapter
         working-directory: build/upstream
         run: |
           bash compile-tun2socks.sh
+
           mkdir -p V2rayNG/app/libs
           cp -r libs/. V2rayNG/app/libs/
 
-      - name: Compile the pinned Xray Android library from source
+      - name: Build Xray Android library
         working-directory: build/upstream/AndroidLibXrayLite
         run: |
           go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20250305212854-3a7bc9f8a4de
           go install golang.org/x/mobile/cmd/gobind@v0.0.0-20250305212854-3a7bc9f8a4de
+
           mkdir -p assets data
+
           bash gen_assets.sh download
+
           cp data/*.dat assets/
+
           gomobile init
+
           go mod tidy
-          gomobile bind -v -target=android -androidapi 21 -trimpath -ldflags='-s -w' -o ../V2rayNG/app/libs/libv2ray.aar ./
 
-      - name: Integrate Khoram2Ry with the real native service
-        run: python3 native/prepare.py --upstream build/upstream --web dist
+          gomobile bind \
+            -v \
+            -target=android \
+            -androidapi 21 \
+            -trimpath \
+            -ldflags="-s -w" \
+            -o ../V2rayNG/app/libs/libv2ray.aar \
+            ./
 
-      - name: Compile and verify debug APKs
+      - name: Integrate Khoram2Ry
+        run: |
+          python3 native/prepare.py \
+            --upstream build/upstream \
+            --web dist
+
+      - name: Build Android APKs
         working-directory: build/upstream/V2rayNG
         run: |
           printf 'sdk.dir=%s\n' "$ANDROID_HOME" > local.properties
+
           chmod +x gradlew
-          ./gradlew assemblePlaystoreDebug '-PABI_FILTERS=arm64-v8a;armeabi-v7a' --no-daemon
-          mkdir -p "$GITHUB_WORKSPACE/artifacts"
-          cp app/build/outputs/apk/playstore/debug/*arm64-v8a*.apk "$GITHUB_WORKSPACE/artifacts/Khoram2Ry-arm64.apk"
-          cp app/build/outputs/apk/playstore/debug/*armeabi-v7a*.apk "$GITHUB_WORKSPACE/artifacts/Khoram2Ry-arm32.apk"
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$GITHUB_WORKSPACE/artifacts/Khoram2Ry-arm64.apk"
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$GITHUB_WORKSPACE/artifacts/Khoram2Ry-arm32.apk"
 
-      - name: Include corresponding source and build provenance
+          ./gradlew assemblePlaystoreDebug \
+            "-PABI_FILTERS=arm64-v8a;armeabi-v7a" \
+            --no-daemon
+
+      - name: Prepare APK artifacts
+        working-directory: build/upstream/V2rayNG
         run: |
-          cp build/upstream/LICENSE artifacts/LICENSE-v2rayNG.txt
-          git -C build/upstream submodule status > artifacts/native-source-versions.txt
-          sha256sum artifacts/*.apk > artifacts/SHA256SUMS.txt
-          tar --exclude='.git' --exclude='node_modules' --exclude='*/.gradle' --exclude='*/app/build' \
-            -czf artifacts/Khoram2Ry-corresponding-source.tar.gz \
-            src public native tests .github index.html package.json package-lock.json tsconfig.json vite.config.ts \
-            build/upstream
+          mkdir -p "$GITHUB_WORKSPACE/artifacts"
 
-      - name: Publish APKs to GitHub Release
+          find app/build/outputs/apk \
+            -type f \
+            -name "*.apk" \
+            -print
+
+          ARM64_APK=$(find app/build/outputs/apk \
+            -type f \
+            -name "*arm64-v8a*.apk" \
+            | head -n 1)
+
+          ARM32_APK=$(find app/build/outputs/apk \
+            -type f \
+            -name "*armeabi-v7a*.apk" \
+            | head -n 1)
+
+          if [ -z "$ARM64_APK" ]; then
+            echo "ARM64 APK not found"
+            exit 1
+          fi
+
+          if [ -z "$ARM32_APK" ]; then
+            echo "ARM32 APK not found"
+            exit 1
+          fi
+
+          cp "$ARM64_APK" \
+            "$GITHUB_WORKSPACE/artifacts/Khoram2Ry-arm64.apk"
+
+          cp "$ARM32_APK" \
+            "$GITHUB_WORKSPACE/artifacts/Khoram2Ry-arm32.apk"
+
+      - name: Verify APK signatures
+        run: |
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify \
+            --verbose \
+            artifacts/Khoram2Ry-arm64.apk
+
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify \
+            --verbose \
+            artifacts/Khoram2Ry-arm32.apk
+
+      - name: Generate checksums
+        run: |
+          sha256sum artifacts/*.apk \
+            > artifacts/SHA256SUMS.txt
+
+      - name: Save build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Khoram2Ry-Android
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="auto-build-${{ github.run_number }}"
+          TAG="android-${{ github.run_number }}"
+
           gh release create "$TAG" \
             artifacts/Khoram2Ry-arm64.apk \
             artifacts/Khoram2Ry-arm32.apk \
             artifacts/SHA256SUMS.txt \
-            --title "Khoram2Ry $TAG" \
-            --notes "Single APK with the Xray VPN core inside. No second app needed. Install arm64 on modern phones, arm32 on 32-bit devices."
+            --title "Khoram2Ry Android $TAG" \
+            --notes "Khoram2Ry Android build.
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Khoram2Ry-native-android
-          path: artifacts/
-          if-no-files-found: error
-          retention-days: 30
+          ARM64:
+          Khoram2Ry-arm64.apk
+
+          ARM32:
+          Khoram2Ry-arm32.apk
+
+          SHA256:
+          SHA256SUMS.txt"
