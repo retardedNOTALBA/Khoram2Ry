@@ -21,10 +21,10 @@ struct KhoramWebView: UIViewRepresentable {
         web.backgroundColor = .black
         web.scrollView.contentInsetAdjustmentBehavior = .never
 
-        if let url = Bundle.main.url(forResource: "index", withExtension: "html") {
+        if let url = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "dist") {
             web.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
         } else {
-            web.loadHTMLString("<html><body style='background:#05060a;color:white;font-family:-apple-system'><h2>Khoram2Ry</h2><p>Build the Vite web app and add dist/ to the iOS target.</p></body></html>", baseURL: nil)
+            web.loadHTMLString("<html><body style='background:#05060a;color:white;font-family:-apple-system'><h2>Khoram2Ry</h2><p>Build the Vite web app bundle is missing from the iOS target.</p></body></html>", baseURL: nil)
         }
         return web
     }

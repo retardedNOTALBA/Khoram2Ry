@@ -1,0 +1,55 @@
+name: Khoram2Ry Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    uses: ./.github/workflows/android.yml
+    secrets: inherit
+
+  ios:
+    uses: ./.github/workflows/ios.yml
+    secrets: inherit
+
+  release:
+    name: Publish Android + iOS Release
+    needs: [android, ios]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Android artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Khoram2Ry-native-android
+          path: artifacts/android
+
+      - name: Download iOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Khoram2Ry-iOS
+          path: artifacts/ios
+
+      - name: Publish combined release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            TAG="${GITHUB_REF_NAME}"
+          else
+            TAG="auto-build-${GITHUB_RUN_NUMBER}"
+          fi
+          gh release create "$TAG" \
+            artifacts/android/Khoram2Ry-arm64.apk \
+            artifacts/android/Khoram2Ry-arm32.apk \
+            artifacts/ios/Khoram2Ry.ipa \
+            artifacts/android/SHA256SUMS.txt \
+            artifacts/ios/SHA256SUMS-iOS.txt \
+            --title "Khoram2Ry $TAG" \
+            --generate-notes
