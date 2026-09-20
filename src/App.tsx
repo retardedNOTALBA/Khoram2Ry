@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Activity, ArrowDown, ArrowUp, ChevronRight, CircleHelp, Download, FileText, Globe, House, Link2, Loader2, Plus, Power, RefreshCw, Search, Server, Settings2, Shield, Smartphone, Sparkles, Star, Timer, Trash2, Zap } from "lucide-react";
+import { Activity, ArrowDown, ArrowUp, ChevronRight, CircleHelp, Code2, Download, FileText, Globe, House, KeyRound, Layers, Link2, Loader2, LockKeyhole, Plus, Power, Radio, RefreshCw, Search, Server, Settings2, Shield, Smartphone, Sparkles, Star, Timer, Trash2, Wifi, Zap } from "lucide-react";
 import { cn } from "./utils/cn";
 import type { AppLog, AppState, Profile, Subscription, Tab, TunnelStatus } from "./types";
 import { defaultState, downloadBackup, loadState, restoreBackup, saveState } from "./lib/storage";
@@ -31,7 +31,7 @@ export default function App() {
   const [sort, setSort] = useState("added");
   const [toast, setToast] = useState("");
   const [storageError, setStorageError] = useState<unknown>(null);
-  const [logs, setLogs] = useState<AppLog[]>([]);
+  const [logs, setLogs] = useState<AppLog[]>(() => loadLogs());
   const [busySub, setBusySub] = useState<string | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
   const [testProgress, setTestProgress] = useState("");
@@ -39,6 +39,7 @@ export default function App() {
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [confirmError, setConfirmError] = useState<unknown>(null);
   const [updateInfo, setUpdateInfo] = useState<{ latestVersion: string; minVersion?: string; updateUrl?: string; message?: string } | null>(null);
+  const updateRequired = !!updateInfo?.minVersion && compareVersions(APP_VERSION, updateInfo.minVersion) < 0;
   const [updateChecking, setUpdateChecking] = useState(true);
   const [resolvedIp, setResolvedIp] = useState("");
   const backupInput = useRef<HTMLInputElement>(null);
@@ -78,12 +79,15 @@ export default function App() {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(""), 5000);
   }, []);
-  const log = useCallback((level: AppLog["level"], message: string) => setLogs((old) => [{ id: uid(), time: Date.now(), level, message }, ...old].slice(0, 100)), []);
+  const log = useCallback((level: AppLog["level"], message: string) => setLogs((old) => [{ id: uid(), time: Date.now(), level, message }, ...old].slice(0, 200)), []);
   const fail = (error: unknown) => { const message = errorMessage(error, state.lang); notify(message); log("err", message); };
 
   useEffect(() => {
     try { saveState(state); setStorageError(null); } catch (e) { setStorageError(e); }
   }, [state]);
+  useEffect(() => {
+    try { localStorage.setItem("khoram2ry:logs:v1", JSON.stringify(logs.slice(0, 200))); } catch { /* logging must never break the app */ }
+  }, [logs]);
   useEffect(() => {
     let cancelled = false;
     const check = async () => {
@@ -447,11 +451,23 @@ export default function App() {
         {sheet === "confirm" && confirmation && <div className="space-y-4"><h3 className="text-[15px]">{confirmation.title}</h3>{confirmation.hint && <p className="text-[12px] leading-6 text-white/45">{confirmation.hint}</p>}{confirmError != null && <Notice danger>{errorMessage(confirmError, state.lang)}</Notice>}<div className="grid grid-cols-2 gap-3"><Button onClick={closeSheet} disabled={confirmBusy}>{t("انصراف", "Cancel")}</Button><Button tone="danger" busy={confirmBusy} onClick={async () => { if (confirmBusy) return; setConfirmBusy(true); try { await confirmation.accept(); closeSheet(); } catch (e) { setConfirmError(e); } finally { setConfirmBusy(false); } }}>{t("تأیید", "Confirm")}</Button></div></div>}
       </Dialog>}
       {toast && <div className="pointer-events-none absolute inset-x-0 bottom-24 z-50 flex justify-center px-5" role="status"><div className="animate-toast max-w-full rounded-2xl bg-white/95 px-4 py-3 text-[12px] leading-6 text-zinc-950 shadow-xl">{toast}</div></div>}
-      {!updateChecking && updateInfo && <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 p-5 backdrop-blur-md">
+      {!updateChecking && updateInfo && !updateRequired && (
+        <div className="absolute inset-x-0 top-3 z-[90] flex justify-center px-4">
+          <div className="flex w-full max-w-[520px] items-center gap-3 rounded-2xl bg-[#151820]/95 p-3 ring-1 ring-teal-300/20 shadow-xl backdrop-blur-md">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-300/10"><Download size={18} className="text-teal-200" /></div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-semibold">{t("نسخه جدید موجود است", "New version available")}</p>
+              <p className="mt-1 text-[10px] text-white/40"><span className="latin">v{APP_VERSION}</span><span className="mx-1">→</span><span className="latin text-teal-200">v{updateInfo.latestVersion}</span></p>
+            </div>
+            <a href={updateInfo.updateUrl || APP_UPDATE_URL} target="_blank" rel="noreferrer" className="shrink-0 rounded-xl bg-teal-300 px-3 py-2 text-[11px] font-semibold text-zinc-950">{t("آپدیت", "Update")}</a>
+          </div>
+        </div>
+      )}
+      {!updateChecking && updateInfo && updateRequired && <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 p-5 backdrop-blur-md">
         <div className="w-full max-w-[360px] rounded-[28px] bg-[#151820] p-6 ring-1 ring-teal-300/15 shadow-2xl">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-300/10"><RefreshCw size={25} className="text-teal-200" /></div>
           <h2 className="mt-5 text-center text-[19px] font-semibold">{t("نیاز به آپدیت", "You need update")}</h2>
-          <p className="mt-3 text-center text-[12px] leading-7 text-white/45">{updateInfo.message || t("نسخه جدید برنامه منتشر شده است. برای ادامه، برنامه را به‌روز کن.", "A new version is available. Update the app to continue.")}</p>
+          <p className="mt-3 text-center text-[12px] leading-7 text-white/45">{updateInfo.message || t("این نسخه دیگر پشتیبانی نمی‌شود. لطفاً برنامه را به‌روز کن.", "This version is no longer supported. Please update the app.")}</p>
           <div className="mt-4 rounded-2xl bg-white/4 p-3 text-center text-[11px] text-white/45">
             <span className="latin">v{APP_VERSION}</span><span className="mx-2">→</span><span className="latin text-teal-200">v{updateInfo.latestVersion}</span>
           </div>
@@ -462,10 +478,24 @@ export default function App() {
   </div>;
 }
 
+function loadLogs(): AppLog[] {
+  try {
+    const raw = localStorage.getItem("khoram2ry:logs:v1");
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((entry): entry is AppLog => entry && typeof entry.id === "string" && typeof entry.time === "number" && ["info", "ok", "err"].includes(entry.level) && typeof entry.message === "string").slice(0, 200);
+  } catch {
+    return [];
+  }
+}
+
 function safeOrigin(url: string) { try { return new URL(url).host; } catch { return ""; } }
 
 function ProtocolMark({ profile }: { profile: Profile }) {
-  return <div className={cn("latin flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-[10px] font-semibold text-zinc-950", protoColor(profile.protocol))}>{profile.protocol === "custom" ? "{ }" : profile.protocol.slice(0, 2).toUpperCase()}</div>;
+  const Icon = profile.protocol === "vless" ? KeyRound : profile.protocol === "vmess" ? Globe : profile.protocol === "trojan" ? LockKeyhole : profile.protocol === "ss" ? Wifi : profile.protocol === "ssr" ? Layers : profile.protocol === "hy2" ? Zap : profile.protocol === "tuic" ? Radio : profile.protocol === "custom" ? Code2 : Server;
+  const label = profile.protocol === "custom" ? "Custom" : profile.protocol.toUpperCase();
+  return <div title={label} aria-label={label} className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-zinc-950 shadow-sm", protoColor(profile.protocol))}><Icon size={17} strokeWidth={2.2} /></div>;
 }
 
 function Empty({ title, description, action, onAction }: { title: string; description: string; action: string; onAction: () => void }) {
