@@ -6,7 +6,7 @@ on:
     branches: [main, master]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   android:
@@ -39,24 +39,29 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+
       - uses: android-actions/setup-android@v3
         with:
           packages: 'platforms;android-35 build-tools;35.0.0 platform-tools'
+
       - name: Install the upstream-compatible NDK
         run: |
           sdkmanager --channel=3 "ndk;29.0.13113456"
           echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.13113456" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.13113456" >> "$GITHUB_ENV"
+
       - uses: actions/setup-go@v5
         with:
           go-version-file: build/upstream/AndroidLibXrayLite/go.mod
           cache: false
+
       - name: Compile the native TUN packet adapter
         working-directory: build/upstream
         run: |
           bash compile-tun2socks.sh
           mkdir -p V2rayNG/app/libs
           cp -r libs/. V2rayNG/app/libs/
+
       - name: Compile the pinned Xray Android library from source
         working-directory: build/upstream/AndroidLibXrayLite
         run: |
@@ -68,8 +73,10 @@ jobs:
           gomobile init
           go mod tidy
           gomobile bind -v -target=android -androidapi 21 -trimpath -ldflags='-s -w' -o ../V2rayNG/app/libs/libv2ray.aar ./
+
       - name: Integrate Khoram2Ry with the real native service
         run: python3 native/prepare.py --upstream build/upstream --web dist
+
       - name: Compile and verify debug APKs
         working-directory: build/upstream/V2rayNG
         run: |
@@ -81,6 +88,7 @@ jobs:
           cp app/build/outputs/apk/playstore/debug/*armeabi-v7a*.apk "$GITHUB_WORKSPACE/artifacts/Khoram2Ry-arm32.apk"
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$GITHUB_WORKSPACE/artifacts/Khoram2Ry-arm64.apk"
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$GITHUB_WORKSPACE/artifacts/Khoram2Ry-arm32.apk"
+
       - name: Include corresponding source and build provenance
         run: |
           cp build/upstream/LICENSE artifacts/LICENSE-v2rayNG.txt
@@ -90,6 +98,7 @@ jobs:
             -czf artifacts/Khoram2Ry-corresponding-source.tar.gz \
             src public native tests .github index.html package.json package-lock.json tsconfig.json vite.config.ts \
             build/upstream
+
       - name: Publish APKs to GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -101,6 +110,7 @@ jobs:
             artifacts/SHA256SUMS.txt \
             --title "Khoram2Ry $TAG" \
             --notes "Single APK with the Xray VPN core inside. No second app needed. Install arm64 on modern phones, arm32 on 32-bit devices."
+
       - uses: actions/upload-artifact@v4
         with:
           name: Khoram2Ry-native-android
