@@ -63,7 +63,7 @@ export function ConfigFree({ lang, t, installed, onAdd }: {
               <p className="latin mt-1 truncate text-[10px] text-white/35" dir="ltr">{item.profile.protocol.toUpperCase()} · {item.profile.host}{item.profile.port ? `:${item.profile.port}` : ""}</p>
               {item.note && <p className="mt-2 text-[10px] leading-5 text-white/35">{item.note}</p>}
             </div>
-            <Button tone={added ? "default" : "primary"} disabled={added} onClick={() => onAdd(item.profile)} className="shrink-0 px-3 text-[11px]">
+            <Button tone={added ? "secondary" : "primary"} disabled={added} onClick={() => onAdd(item.profile)} className="shrink-0 px-3 text-[11px]">
               {added ? <><Check size={13} />{t("دریافت شد", "Added")}</> : <><Download size={13} />{t("دریافت", "Get")}</>}
             </Button>
           </div>
