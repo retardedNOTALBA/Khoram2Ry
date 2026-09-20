@@ -1,4 +1,4 @@
-```tsx
+
 import { useEffect, useState } from "react";
 import { Check, Download, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 import type { Lang, Profile } from "../types";
@@ -169,4 +169,3 @@ export function ConfigFree({
     </div>
   );
 }
-```
