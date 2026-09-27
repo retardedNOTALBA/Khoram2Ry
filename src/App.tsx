@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
-import { Activity, ArrowDown, ArrowUp, ChevronRight, Code2, Download, FileText, Globe, House, KeyRound, Layers, Link2, Loader2, LockKeyhole, Plus, Power, Radio, RefreshCw, Search, Server, Settings2, Shield, Smartphone, Sparkles, Star, Trash2, Wifi, Zap } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { Activity, ArrowDown, ChevronRight, Code2, Download, FileText, Globe, House, KeyRound, Layers, Link2, Loader2, LockKeyhole, Plus, Power, Radio, RefreshCw, Search, Server, Settings2, Shield, Smartphone, Sparkles, Star, Timer, Trash2, Wifi, Zap } from "lucide-react";
 import { cn } from "./utils/cn";
 import type { AppLog, AppState, Profile, Subscription, Tab, TunnelStatus } from "./types";
 import { defaultState, downloadBackup, loadState, restoreBackup, saveState } from "./lib/storage";
@@ -510,66 +510,62 @@ function Home({ t, selected, status, busy, error, routing, onRouting, onChoose, 
 }) {
   const connected = status.available && status.state === "connected";
   const pending = smartActive || busy || status.state === "connecting" || status.state === "disconnecting";
-  const statusText = smartActive && smartText ? smartText : pending ? t("در حال آماده‌سازی اتصال", "Preparing connection") : connected ? t("متصل", "Connected") : t("قطع است", "Disconnected");
+  const statusText = smartActive && smartText ? smartText : pending ? t("در حال آماده‌سازی اتصال", "Preparing connection") : connected ? t("اتصال محافظت‌شده", "Protected connection") : t("آماده اتصال", "Ready to connect");
   const connectionTime = connected ? formatDuration(status.elapsedMs) : "00:00:00";
+  const serverDescription = selected
+    ? `${selected.host}${selected.port ? `:${selected.port}` : ""}`
+    : t("یک کانفیگ اضافه کن تا شروع کنیم", "Add a configuration to get started");
+  const routingText = routing === "smart" ? t("هوشمند", "Smart") : routing === "global" ? t("سراسری", "Global") : t("مستقیم", "Direct");
 
-  return <div className="ios-home px-5 pb-6">
-    <div className="ios-connection-stage">
-      <p className="ios-section-label text-center">{t("مدت اتصال", "CONNECTION TIME")}</p>
-      <p className="ios-timer latin" dir="ltr">{connectionTime}</p>
-      <span className={cn("ios-status-pill", connected ? "is-connected" : pending ? "is-pending" : "")}>
-        <span className="ios-status-dot" />{statusText}
-      </span>
-      {autoOn && <p className="ios-auto-label"><Sparkles size={12} />{t("اتصال هوشمند فعال است", "Smart connection is on")}</p>}
-    </div>
+  return <div className="dashboard-home px-5 pb-5">
+    <section className={cn("connection-hero", connected && "is-connected", pending && "is-pending")}>
+      <div className="connection-hero-top">
+        <span className="connection-state"><span className="connection-state-dot" />{statusText}</span>
+        {autoOn && <span className="connection-auto"><Sparkles size={12} />{t("هوشمند", "Smart")}</span>}
+      </div>
+      <div className="connection-hero-body">
+        <p className="connection-kicker">{connected ? t("زمان محافظت", "PROTECTED FOR") : t("تونل خصوصی تو", "YOUR PRIVATE TUNNEL")}</p>
+        <p className="connection-time latin" dir="ltr">{connectionTime}</p>
+        <p className="connection-caption">{connected ? t("ترافیک دستگاه از تونل انتخابی عبور می‌کند.", "Device traffic is using your selected tunnel.") : t("نوار پایین را بکش تا اتصال هوشمند شروع شود.", "Use the slider below to start a smart connection.")}</p>
+      </div>
+      <div className="connection-metrics" aria-label={t("آمار اتصال", "Connection statistics")}>
+        <div><Timer size={15} /><span>{t("مدت", "Time")}</span><strong className="latin" dir="ltr">{connectionTime}</strong></div>
+        <div><ArrowDown size={15} /><span>{t("دریافت", "Download")}</span><strong className="latin" dir="ltr">{status.downloaded == null ? "0 B" : formatBytes(status.downloaded)}</strong></div>
+        <div><Activity size={15} /><span>{t("پینگ", "Latency")}</span><strong className="latin" dir="ltr">{selected?.latency != null ? `${selected.latency} ms` : "—"}</strong></div>
+      </div>
+    </section>
 
-    <section className="ios-section">
-      <p className="ios-section-label">{t("اطلاعات", "INFORMATION")}</p>
-      <div className="ios-group">
-        <div className="ios-row">
-          <span className="ios-row-icon"><Globe size={18} /></span>
-          <span className="ios-row-copy"><strong>{statusText}</strong><small>{connected ? t("تونل VPN فعال است", "VPN tunnel is active") : t("برای شروع دکمه را بزن", "Tap power to connect")}</small></span>
-        </div>
-        <div className="ios-row">
-          <span className="ios-row-icon"><Server size={18} /></span>
-          <span className="ios-row-copy"><strong>{t("آدرس سرور", "Server address")}</strong><small className="latin" dir="ltr">{selected ? `${selected.host}${selected.port ? `:${selected.port}` : ""}` : "127.0.0.1"}{resolvedIp ? ` · ${resolvedIp}` : ""}</small></span>
-        </div>
-        <button className="ios-row ios-row-button" onClick={selected ? onChoose : onAdd}>
-          <span className="ios-row-icon">{selected ? <ProtocolMark profile={selected} /> : <Plus size={18} />}</span>
-          <span className="ios-row-copy"><strong>{selected?.name || t("انتخاب کانفیگ", "Select configuration")}</strong><small className="latin" dir="ltr">{selected ? selected.protocol.toUpperCase() : t("افزودن یا انتخاب سرور", "Add or choose a server")}</small></span>
-          <ChevronRight size={18} className="ios-chevron rtl:rotate-180" />
+    <section className="dashboard-section">
+      <div className="dashboard-section-heading"><p>{t("اتصال فعال", "ACTIVE CONNECTION")}</p><button onClick={selected ? onChoose : onAdd}>{t("تغییر", "Change")}</button></div>
+      <button className={cn("active-server-card", !selected && "is-empty")} onClick={selected ? onChoose : onAdd}>
+        <span className="active-server-mark">{selected ? <ProtocolMark profile={selected} /> : <Plus size={21} />}</span>
+        <span className="active-server-copy"><strong>{selected?.name || t("انتخاب سرور", "Choose a server")}</strong><small className={selected ? "latin" : ""} dir={selected ? "ltr" : undefined}>{serverDescription}{resolvedIp ? ` · ${resolvedIp}` : ""}</small></span>
+        <span className="active-server-meta">{selected ? selected.protocol.toUpperCase() : t("افزودن", "Add")}<ChevronRight size={17} className="rtl:rotate-180" /></span>
+      </button>
+    </section>
+
+    <section className="dashboard-section">
+      <div className="dashboard-section-heading"><p>{t("ابزارهای سریع", "QUICK TOOLS")}</p></div>
+      <div className="quick-tools-grid">
+        <button className="quick-tool" onClick={onTest} disabled={!selected || testing || !native}>
+          <span className="quick-tool-icon">{testing ? <Loader2 size={19} className="animate-spin" /> : <Activity size={19} />}</span>
+          <span><strong>{testing ? t("در حال تست", "Testing") : t("تست اتصال", "Test connection")}</strong><small>{selected?.latency != null ? `${selected.latency} ms` : t("بررسی واقعی پراکسی", "Real proxy check")}</small></span>
+        </button>
+        <button className="quick-tool" onClick={onConfigFree}>
+          <span className="quick-tool-icon"><Download size={19} /></span>
+          <span><strong>Config Free</strong><small>{t("مرور سرورهای منتشرشده", "Browse shared servers")}</small></span>
         </button>
       </div>
     </section>
 
-    <section className="ios-section">
-      <p className="ios-section-label">{t("ترافیک", "TRAFFIC")}</p>
-      <div className="ios-group ios-traffic-group">
-        <Metric icon={<ArrowDown size={17} />} label={t("دریافت", "Downloaded")} value={status.downloaded == null ? "0 B" : formatBytes(status.downloaded)} />
-        <Metric icon={<ArrowUp size={17} />} label={t("ارسال", "Uploaded")} value={status.uploaded == null ? "0 B" : formatBytes(status.uploaded)} />
-      </div>
-    </section>
-
-    <section className="ios-section">
-      <p className="ios-section-label">{t("کنترل", "CONTROL")}</p>
-      <div className="ios-group">
-        <button className="ios-row ios-row-button" onClick={onConfigFree}>
-          <span className="ios-row-icon"><Download size={18} /></span>
-          <span className="ios-row-copy"><strong>Config Free</strong><small>{t("مرور کانفیگ‌های منتشرشده", "Browse published configurations")}</small></span>
-          <ChevronRight size={18} className="ios-chevron rtl:rotate-180" />
-        </button>
-        <button className="ios-row ios-row-button" onClick={onTest} disabled={!selected || testing || !native}>
-          <span className="ios-row-icon"><Activity size={18} /></span>
-          <span className="ios-row-copy"><strong>{testing ? t("در حال تست…", "Testing…") : t("تست اتصال", "Test connection")}</strong><small>{selected?.latency != null ? `${selected.latency} ms` : t("یک درخواست واقعی از پراکسی", "Run a real proxy request")}</small></span>
-          <ChevronRight size={18} className="ios-chevron rtl:rotate-180" />
-        </button>
-        <div className="ios-row ios-routing-row">
-          <span className="ios-row-icon"><Radio size={18} /></span>
-          <span className="ios-row-copy"><strong>{t("مسیریابی", "Routing")}</strong><small>{routing === "smart" ? t("هوشمند", "Smart") : routing === "global" ? t("سراسری", "Global") : t("مستقیم", "Direct")}</small></span>
-          <select aria-label={t("مسیریابی", "Routing")} value={routing} onChange={(event) => onRouting(event.target.value as AppState["routing"])} disabled={connected || pending} className="ios-routing-select">
-            <option value="smart">{t("هوشمند", "Smart")}</option><option value="global">{t("سراسری", "Global")}</option><option value="direct">{t("مستقیم", "Direct")}</option>
-          </select>
-        </div>
+    <section className="dashboard-section">
+      <div className="dashboard-section-heading"><p>{t("مسیر اتصال", "CONNECTION ROUTE")}</p></div>
+      <div className="route-panel">
+        <span className="route-panel-icon"><Radio size={18} /></span>
+        <span className="route-panel-copy"><strong>{t("حالت مسیریابی", "Routing mode")}</strong><small>{routingText}</small></span>
+        <select aria-label={t("مسیریابی", "Routing")} value={routing} onChange={(event) => onRouting(event.target.value as AppState["routing"])} disabled={connected || pending}>
+          <option value="smart">{t("هوشمند", "Smart")}</option><option value="global">{t("سراسری", "Global")}</option><option value="direct">{t("مستقیم", "Direct")}</option>
+        </select>
       </div>
     </section>
 
@@ -577,7 +573,6 @@ function Home({ t, selected, status, busy, error, routing, onRouting, onChoose, 
     {!native && <button onClick={onGetApp} className="ios-native-note"><Smartphone size={17} /><span><strong>{t("اتصال واقعی فقط در اندروید", "Native Android required")}</strong><small>{t("در مرورگر می‌توانی کانفیگ‌ها را مدیریت کنی.", "The browser can manage configurations only.")}</small></span><ChevronRight size={17} className="rtl:rotate-180" /></button>}
   </div>;
 }
-
 
 function ConnectSlider({ t, connected, pending, disabled, onTrigger }: { t: Text; connected: boolean; pending: boolean; disabled: boolean; onTrigger: () => void }) {
   const rail = useRef<HTMLDivElement>(null);
@@ -659,8 +654,4 @@ function ConnectSlider({ t, connected, pending, disabled, onTrigger }: { t: Text
     </div>
     <p className="ios-slider-hint">{rtl ? t("به سمت چپ بکش", "Swipe left") : t("به سمت راست بکش", "Swipe right")}</p>
   </div>;
-}
-
-function Metric({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
-  return <div className="ios-traffic-metric"><p>{icon}<span>{label}</span></p><strong className="latin" dir="ltr">{value}</strong></div>;
 }
