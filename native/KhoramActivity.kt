@@ -116,8 +116,8 @@ class KhoramActivity : AppCompatActivity() {
 
         KhoramRuntime.initialize(applicationContext)
 
-        window.statusBarColor = Color.rgb(7, 8, 12)
-        window.navigationBarColor = Color.rgb(11, 13, 18)
+        window.statusBarColor = Color.BLACK
+        window.navigationBarColor = Color.BLACK
 
         val assets = WebViewAssetLoader.Builder()
             .addPathHandler(
@@ -128,7 +128,7 @@ class KhoramActivity : AppCompatActivity() {
 
         web = WebView(this)
 
-        web.setBackgroundColor(Color.rgb(7, 8, 12))
+        web.setBackgroundColor(Color.BLACK)
 
         web.settings.javaScriptEnabled = true
         web.settings.domStorageEnabled = true

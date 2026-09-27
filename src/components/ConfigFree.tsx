@@ -34,9 +34,9 @@ export function ConfigFree({ lang, t, installed, onAdd }: {
   const isInstalled = (item: ConfigFreeResult) => installed.some((profile) => profile.raw === item.raw);
 
   return <div className="space-y-4">
-    <div className="rounded-2xl bg-teal-300/5 p-4 ring-1 ring-teal-300/10">
+    <div className="rounded-[12px] bg-[#0a84ff]/10 p-4 ring-1 ring-[#0a84ff]/25">
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-300/10"><ShieldCheck size={19} className="text-teal-200" /></div>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[#0a84ff]/15"><ShieldCheck size={19} className="text-[#0a84ff]" /></div>
         <div className="min-w-0 flex-1">
           <h3 className="text-[14px] font-medium">{t("Config Free", "Config Free")}</h3>
           <p className="mt-1 text-[11px] leading-6 text-white/40">{t("کانفیگ‌های منتشرشده در مخزن مرکزی را ببین و هرکدام را خواستی به سرورهای خودت اضافه کن.", "Browse configurations from the central repository and add the ones you want.")}</p>
@@ -56,7 +56,7 @@ export function ConfigFree({ lang, t, installed, onAdd }: {
     <div className="space-y-2.5">
       {items.map((item) => {
         const added = isInstalled(item);
-        return <div key={item.id} className="rounded-2xl bg-white/3 p-4 ring-1 ring-white/7">
+        return <div key={item.id} className="rounded-[12px] bg-[#1c1c1e] p-4 ring-1 ring-white/10">
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] font-medium">{item.name}</p>

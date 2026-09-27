@@ -56,7 +56,7 @@ Khoram2Ry/
 - **Remote updates:** `public/app-version.json` controls the current required app version.
 - **Server endpoint/IP:** the Android build resolves the selected server hostname and shows the resolved IP when available.
 - **Smart connection:** refresh, latency testing, fallback and reconnect remain available without branding references to other VPN apps.
-- **Smooth 2.1 interface:** a lighter icon, static background layers, compositor-friendly connection animation and adaptive tunnel polling reduce startup, redraw and idle work on mobile devices.
+- **iOS-inspired 2.2 interface:** true-black Android chrome, iOS-style grouped rows, a compact connection timer and a one-tap blue power control — while keeping Khoram2Ry’s independent identity and Android behavior.
 - **Responsive native telemetry:** Xray traffic/status reads use a dedicated native worker, so a slow ping or subscription refresh does not freeze the WebView.
 
 See `CONFIG-FREE.md` for the repository-side configuration management instructions.
