@@ -3,6 +3,7 @@ import { Download, ExternalLink, Upload, Smartphone, SlidersHorizontal, Trash2, 
 import type { AppState, Lang } from "../types";
 import { AppError, errorMessage } from "../lib/errors";
 import { hasNativeCore, validAdvanced } from "../lib/native";
+import { APP_VERSION } from "../lib/appVersion";
 import { Button, Choice, Field, Notice, textFor, Toggle } from "./ui";
 
 export function SettingsPanel({ state, locked, onPatch, onBackup, onRestore, onClear, onGetApp, onNativeTools }: {
@@ -17,11 +18,11 @@ export function SettingsPanel({ state, locked, onPatch, onBackup, onRestore, onC
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const update = <K extends keyof typeof draft>(key: K, value: typeof draft[K]) => { setDraft((d) => ({ ...d, [key]: value })); setSaved(false); };
-  return <div className="space-y-6 px-5 pb-8">
+  return <div className="settings-ios space-y-6 px-5 pb-8">
     <div><h2 className="text-[19px] font-semibold">{t("تنظیمات", "Settings")}</h2><p className="mt-1 text-[11px] text-white/40">{t("کنترل بیشتر، بدون شلوغی", "More control. Less clutter.")}</p></div>
     <div className="grid grid-cols-2 gap-3"><Choice label={t("زبان", "Language")} value={state.lang} onChange={(lang) => onPatch({ lang: lang as Lang })} options={[{ value: "fa", label: "فارسی" }, { value: "en", label: "English" }]} /><Choice label={t("ظاهر", "Appearance")} value={state.theme} onChange={(theme) => onPatch({ theme: theme === "oled" ? "oled" : "night" })} options={[{ value: "night", label: t("شب", "Night") }, { value: "oled", label: "OLED" }]} /></div>
-    <section className="space-y-1 rounded-2xl bg-teal-300/5 p-4 ring-1 ring-teal-300/15">
-      <h3 className="flex items-center gap-2 text-[13px] font-medium text-teal-100"><Smartphone size={15} className="text-teal-300" />{t("اتصال خودکار", "Automatic connection")}</h3>
+    <section className="space-y-1 rounded-[12px] bg-[#1c1c1e] p-4 ring-1 ring-white/10">
+      <h3 className="flex items-center gap-2 text-[13px] font-medium text-white"><Smartphone size={15} className="text-[#7987ff]" />{t("اتصال خودکار", "Automatic connection")}</h3>
       <p className="pb-1 text-[11px] leading-6 text-white/40">{t("با یک لمس: اشتراک به‌روز می‌شود، سریع‌ترین سرور پیدا می‌شود و در صورت قطعی، خودش به سرور بعدی وصل می‌شود.", "One tap does it all: subscriptions refresh, the fastest server is picked, and drops fall over to the next server.")}</p>
       <div className="divide-y divide-white/5">
         <Toggle label={t("اتصال خودکار هنگام باز شدن اپ", "Auto-connect on launch")} hint={t("فقط در نسخه اندروید", "Native Android app only")} value={state.autoConnect} onChange={(v) => onPatch({ autoConnect: v })} />
@@ -30,7 +31,7 @@ export function SettingsPanel({ state, locked, onPatch, onBackup, onRestore, onC
       </div>
     </section>
     <section className="space-y-4 border-t border-white/8 pt-5">
-      <h3 className="flex items-center gap-2 text-[13px] font-medium"><SlidersHorizontal size={15} className="text-teal-300" />{t("تنظیمات پیشرفته هسته", "Advanced core settings")}</h3>
+      <h3 className="flex items-center gap-2 text-[13px] font-medium"><SlidersHorizontal size={15} className="text-[#7987ff]" />{t("تنظیمات پیشرفته هسته", "Advanced core settings")}</h3>
       <p className="text-[11px] leading-6 text-white/40">{t("در اتصال بعدی نسخه اندروید اعمال می‌شود. کانفیگ JSON کامل از تنظیمات داخلی خودش استفاده می‌کند.", "Applied to your next Android connection. Full JSON configurations use their own core settings.")}</p>
       {locked && <Notice>{t("برای ویرایش، ابتدا VPN را قطع کنید.", "Disconnect the VPN before editing core settings.")}</Notice>}
       <fieldset disabled={locked} className="space-y-4 disabled:opacity-50">
@@ -44,8 +45,8 @@ export function SettingsPanel({ state, locked, onPatch, onBackup, onRestore, onC
         <Field label={t("آدرس درخواست تست از داخل پراکسی", "URL requested through the proxy during tests")} dir="ltr" type="url" value={draft.testUrl} onChange={(v) => update("testUrl", v)} />
         <details className="border-t border-white/6 pt-3"><summary className="cursor-pointer text-[12px] text-white/70">{t("قوانین مسیریابی دامنه", "Domain routing rules")}</summary><div className="mt-4 space-y-4">
           <p className="text-[11px] leading-6 text-white/40">{t("هر خط یک دامنه بدون https://. قوانین مسدودسازی اولویت دارند. حالت هوشمند فقط شبکه محلی را مستقیم می‌کند.", "One domain per line, without https://. Blocking takes priority. Smart mode bypasses local networks only.")}</p>
-          <label className="block text-[11px] text-white/50">{t("اتصال مستقیم", "Direct domains")}<textarea value={draft.directDomains} onChange={(e) => update("directDomains", e.target.value)} dir="ltr" className="latin mt-2 h-24 w-full rounded-xl bg-white/5 p-3 text-[12px] text-white/85" /></label>
-          <label className="block text-[11px] text-white/50">{t("مسدود", "Blocked domains")}<textarea value={draft.blockedDomains} onChange={(e) => update("blockedDomains", e.target.value)} dir="ltr" className="latin mt-2 h-24 w-full rounded-xl bg-white/5 p-3 text-[12px] text-white/85" /></label>
+          <label className="block text-[11px] text-white/50">{t("اتصال مستقیم", "Direct domains")}<textarea value={draft.directDomains} onChange={(e) => update("directDomains", e.target.value)} dir="ltr" className="latin mt-2 h-24 w-full rounded-[10px] bg-[#1c1c1e] p-3 text-[12px] text-white/85" /></label>
+          <label className="block text-[11px] text-white/50">{t("مسدود", "Blocked domains")}<textarea value={draft.blockedDomains} onChange={(e) => update("blockedDomains", e.target.value)} dir="ltr" className="latin mt-2 h-24 w-full rounded-[10px] bg-[#1c1c1e] p-3 text-[12px] text-white/85" /></label>
         </div></details>
         {error != null && <Notice danger>{errorMessage(error, state.lang)}</Notice>}
         <Button tone="primary" className="w-full" disabled={locked} onClick={() => {
@@ -60,8 +61,8 @@ export function SettingsPanel({ state, locked, onPatch, onBackup, onRestore, onC
     </section>
     <section className="space-y-3 border-t border-white/8 pt-5"><h3 className="text-[12px] text-white/50">{t("داده‌های شما", "Your data")}</h3><p className="text-[11px] leading-6 text-white/35">{t("فایل پشتیبان شامل رمزها و ساب‌لینک است و رمزنگاری نشده؛ آن را عمومی نکنید.", "Backups contain credentials and subscription URLs in plain text. Keep them private.")}</p><div className="grid grid-cols-2 gap-2"><Button onClick={onBackup}><Download size={15} />{t("پشتیبان", "Backup")}</Button><Button onClick={onRestore} disabled={locked}><Upload size={15} />{t("بازیابی", "Restore")}</Button></div><Button tone="danger" className="w-full" onClick={onClear} disabled={locked}><Trash2 size={15} />{t("پاک کردن تمام داده‌ها", "Clear all data")}</Button></section>
     <div className="border-t border-white/8 pt-5">
-      <div className="flex items-center gap-3"><img src="/icon.png" alt="" className="h-10 w-10 rounded-xl" /><div><p className="latin text-[14px] font-medium">Khoram2Ry <span className="text-white/30">2.0.1</span></p><p className="mt-1 text-[10px] text-white/35">{t("رابط مستقل؛ سرویس اتصال اندروید داخل خود برنامه", "Independent interface; Android connection service is built in")}</p></div></div>
-      <a href="https://github.com/retardedNOTALBA/Khoram2Ry" target="_blank" rel="noreferrer" className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-white/5 px-4 py-3 text-[12px] text-white/70 ring-1 ring-white/8 transition hover:bg-white/8 hover:text-white"><ExternalLink size={15} />GitHub</a>
+      <div className="flex items-center gap-3"><img src="/icon.png" alt="" className="h-10 w-10 rounded-[10px]" /><div><p className="latin text-[14px] font-medium">Khoram2Ry <span className="text-white/30">{APP_VERSION}</span></p><p className="mt-1 text-[10px] text-white/35">{t("رابط مستقل؛ سرویس اتصال اندروید داخل خود برنامه", "Independent interface; Android connection service is built in")}</p></div></div>
+      <a href="https://github.com/retardedNOTALBA/Khoram2Ry" target="_blank" rel="noreferrer" className="mt-4 flex w-full items-center justify-center gap-2 rounded-[10px] bg-[#1c1c1e] px-4 py-3 text-[12px] text-white/70 ring-1 ring-white/10 transition hover:bg-white/8 hover:text-white"><ExternalLink size={15} />GitHub</a>
     </div>
   </div>;
 }

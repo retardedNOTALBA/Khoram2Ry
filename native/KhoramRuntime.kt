@@ -959,7 +959,7 @@ object KhoramRuntime {
 
             connection.setRequestProperty(
                 "User-Agent",
-                "Khoram2Ry/2.0"
+                "Khoram2Ry/2.2"
             )
 
             try {

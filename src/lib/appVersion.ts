@@ -1,4 +1,4 @@
-export const APP_VERSION = "2.0.1";
+export const APP_VERSION = "2.2.0";
 export const APP_VERSION_URL = "https://raw.githubusercontent.com/retardedNOTALBA/Khoram2Ry/main/public/app-version.json";
 export const APP_UPDATE_URL = "https://github.com/retardedNOTALBA/Khoram2Ry/releases/latest";
 

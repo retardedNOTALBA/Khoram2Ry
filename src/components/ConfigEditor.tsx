@@ -42,10 +42,10 @@ export function ConfigEditor({ lang, onImport, onSubscription }: { lang: Lang; o
     } catch (e) { setError(e); }
   };
   return <div className="space-y-4">
-    <div className="grid grid-cols-2 gap-1 rounded-xl bg-white/5 p-1">{(["link", "manual"] as const).map((m) => <button type="button" key={m} onClick={() => { setMode(m); setError(null); }} className={cn("h-10 rounded-lg text-[12px]", mode === m ? "bg-white/10 text-white" : "text-white/45")}>{m === "link" ? t("لینک / JSON / فایل", "Link / JSON / file") : t("ورود دستی", "Manual configuration")}</button>)}</div>
+    <div className="grid grid-cols-2 gap-1 rounded-[10px] bg-[#1c1c1e] p-1">{(["link", "manual"] as const).map((m) => <button type="button" key={m} onClick={() => { setMode(m); setError(null); }} className={cn("h-10 rounded-lg text-[12px]", mode === m ? "bg-white/10 text-white" : "text-white/45")}>{m === "link" ? t("لینک / JSON / فایل", "Link / JSON / file") : t("ورود دستی", "Manual configuration")}</button>)}</div>
     {mode === "link" ? <>
       <p className="text-[12px] leading-6 text-white/45">{t("فقط کانفیگ‌های خودت را وارد کن. لینک تکی، لیست Base64 یا JSON کامل Xray پذیرفته می‌شود.", "Import your own configurations: share links, a Base64 list or full Xray JSON.")}</p>
-      <textarea aria-label={t("کانفیگ", "Configuration")} dir="ltr" value={text} spellCheck={false} onChange={(e) => { setText(e.target.value); setError(null); }} placeholder="vless://...\nvmess://...\n{ ... }" className="latin selectable h-44 w-full resize-y rounded-2xl bg-black/25 p-3 text-[12px] leading-6 text-white/85 ring-1 ring-white/8 placeholder:text-white/25" />
+      <textarea aria-label={t("کانفیگ", "Configuration")} dir="ltr" value={text} spellCheck={false} onChange={(e) => { setText(e.target.value); setError(null); }} placeholder="vless://...\nvmess://...\n{ ... }" className="latin selectable h-44 w-full resize-y rounded-[12px] bg-[#1c1c1e] p-3 text-[12px] leading-6 text-white/85 ring-1 ring-white/8 placeholder:text-white/25" />
       <div className="grid grid-cols-3 gap-2">
         <Button disabled={loading} className="px-1 text-[11px]" onClick={() => void run(async () => { setText(await readClipboardText()); })}><ClipboardPaste size={14} />{t("چسباندن", "Paste")}</Button>
         <Button disabled={loading} className="px-1 text-[11px]" onClick={() => input.current?.click()}><FileUp size={14} />{t("فایل", "File")}</Button>
@@ -54,7 +54,7 @@ export function ConfigEditor({ lang, onImport, onSubscription }: { lang: Lang; o
       <input className="hidden" ref={input} type="file" accept=".txt,.json,.conf,application/json,text/plain" onChange={(e) => { loadFile(e.target.files?.[0]); e.target.value = ""; }} />
       <input className="hidden" ref={qr} type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => { loadFile(e.target.files?.[0], true); e.target.value = ""; }} />
       {subscriptionUrl && <Notice>{t("این یک ساب‌لینک است. در مرحله بعد می‌توانی آن را ثبت کنی؛ هنوز درخواستی ارسال نشده.", "This is a subscription URL. Continue to review it before fetching. No request has been sent.")}</Notice>}
-      {!subscriptionUrl && preview && <div className="space-y-2 text-[12px]"><p className="flex items-center gap-2 text-teal-200"><Check size={14} />{preview.profiles.length} {t("کانفیگ معتبر", "valid configurations")}{preview.duplicates > 0 && ` / ${preview.duplicates} ${t("تکراری", "duplicates")}`}</p>
+      {!subscriptionUrl && preview && <div className="space-y-2 text-[12px]"><p className="flex items-center gap-2 text-[#7987ff]"><Check size={14} />{preview.profiles.length} {t("کانفیگ معتبر", "valid configurations")}{preview.duplicates > 0 && ` / ${preview.duplicates} ${t("تکراری", "duplicates")}`}</p>
         {preview.invalid.length > 0 && <Notice danger>{preview.invalid.length} {t("مورد نامعتبر اضافه نمی‌شود.", "invalid entries will not be imported.")}<br />{t("خط", "Line")} {preview.invalid[0].line}: {errorMessage(new AppError(preview.invalid[0].code), lang)}</Notice>}
       </div>}
     </> : <div className="space-y-3">
@@ -94,7 +94,7 @@ export function SubscriptionForm({ lang, initial, incomingUrl = "", onSave }: { 
   }}>
     <Field label={t("نام اشتراک", "Subscription name")} value={name} onChange={setName} disabled={busy} />
     <Field label={t("ساب‌لینک خصوصی شما", "Your private subscription URL")} value={url} onChange={setUrl} type="url" dir="ltr" placeholder="https://" required disabled={busy} />
-    <label className="block"><span className="mb-2 block text-[11px] text-white/45">{t("یا محتوای ساب (اختیاری، بدون درخواست شبکه)", "Or subscription body (optional, no network request)")}</span><textarea dir="ltr" spellCheck={false} value={body} disabled={busy} onChange={(e) => setBody(e.target.value)} className="latin h-24 w-full rounded-xl bg-white/5 p-3 text-[12px] ring-1 ring-white/8" /></label>
+    <label className="block"><span className="mb-2 block text-[11px] text-white/45">{t("یا محتوای ساب (اختیاری، بدون درخواست شبکه)", "Or subscription body (optional, no network request)")}</span><textarea dir="ltr" spellCheck={false} value={body} disabled={busy} onChange={(e) => setBody(e.target.value)} className="latin h-24 w-full rounded-[10px] bg-[#1c1c1e] p-3 text-[12px] ring-1 ring-white/8" /></label>
     <Toggle label={t("بررسی روزانه هنگام باز کردن اپ", "Check daily on app launch")} value={auto} onChange={setAuto} disabled={busy} />
     <p className="text-[11px] leading-6 text-white/40">{t("دریافت فقط از آدرس خودتان انجام می‌شود؛ لینک به پراکسی عمومی ارسال نمی‌شود. در وب، محدودیت CORS ممکن است مانع دریافت شود.", "Fetched directly from your URL, never through public proxies. Browser CORS may block retrieval.")}</p>
     {error != null && <Notice danger>{errorMessage(error, lang)}</Notice>}

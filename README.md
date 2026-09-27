@@ -13,6 +13,7 @@ Khoram2Ry is a lightweight mobile application designed to manage and connect to 
 - 🔗 Import V2Ray configurations
 - ⚡ Fast and lightweight connection management
 - 🎨 Modern and clean user interface
+- ⚡ Smooth, low-overhead mobile WebView rendering
 - 🔄 Cross-platform architecture
 - 📋 Easy configuration management
 
@@ -55,6 +56,8 @@ Khoram2Ry/
 - **Remote updates:** `public/app-version.json` controls the current required app version.
 - **Server endpoint/IP:** the Android build resolves the selected server hostname and shows the resolved IP when available.
 - **Smart connection:** refresh, latency testing, fallback and reconnect remain available without branding references to other VPN apps.
+- **iOS-inspired 2.2 interface:** true-black Android chrome, iOS-style grouped rows, a compact connection timer and a one-tap blue power control — while keeping Khoram2Ry’s independent identity and Android behavior.
+- **Responsive native telemetry:** Xray traffic/status reads use a dedicated native worker, so a slow ping or subscription refresh does not freeze the WebView.
 
 See `CONFIG-FREE.md` for the repository-side configuration management instructions.
 
