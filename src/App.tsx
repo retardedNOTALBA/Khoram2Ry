@@ -520,7 +520,7 @@ function Home({ t, selected, status, busy, error, routing, onRouting, onChoose, 
       <div className="nova-hero-top"><span className="nova-eyebrow">KHORAM NETWORK</span>{autoOn && <span className="nova-auto"><Sparkles size={12} />{t("خودکار", "Auto")}</span>}</div>
       <div className="nova-hero-main">
         <div className="nova-signal" aria-hidden="true"><span className="nova-signal-ring ring-one" /><span className="nova-signal-ring ring-two" /><span className="nova-signal-core"><Shield size={27} /></span></div>
-        <div className="nova-hero-copy"><p>{statusText}</p><h2>{connected ? t("اتصال امن است", "Connection secured") : t("اینترنت خصوصی، ساده", "Private internet, simply")}</h2><small>{connected ? t("تونل فعال است و برای قطع، نوار پایین را بکش.", "Your tunnel is active. Slide below to disconnect.") : t("سرور را انتخاب کن، سپس نوار پایین را بکش.", "Choose a server, then use the slider below.")}</small></div>
+        <div className="nova-hero-copy"><p>{statusText}</p><h2 className={connected ? undefined : "latin"}>{connected ? t("اتصال امن است", "Connection secured") : "Khoram2Ry"}</h2>{connected && <small>{t("تونل فعال است و برای قطع، نوار پایین را بکش.", "Your tunnel is active. Slide below to disconnect.")}</small>}</div>
       </div>
       <div className="nova-hero-line" />
       <div className="nova-hero-foot"><span><span className="nova-pulse" />{connected ? t("در حال محافظت", "Protected") : pending ? t("در حال برقراری", "Establishing") : t("بدون اتصال فعال", "No active connection")}</span><strong className="latin" dir="ltr">{connected ? formatDuration(status.elapsedMs) : "00:00:00"}</strong></div>
