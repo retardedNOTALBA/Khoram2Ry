@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { Activity, ArrowDown, ChevronRight, Code2, Download, FileText, Globe, House, KeyRound, Layers, Link2, Loader2, LockKeyhole, Plus, Power, Radio, RefreshCw, Search, Server, Settings2, Shield, Smartphone, Sparkles, Star, Timer, Trash2, Wifi, Zap } from "lucide-react";
+import { Activity, ArrowDown, ArrowUp, ChevronRight, Code2, Download, FileText, Globe, House, KeyRound, Layers, Link2, Loader2, LockKeyhole, Plus, Power, Radio, RefreshCw, Search, Server, Settings2, Shield, Smartphone, Sparkles, Star, Trash2, Wifi, Zap } from "lucide-react";
 import { cn } from "./utils/cn";
 import type { AppLog, AppState, Profile, Subscription, Tab, TunnelStatus } from "./types";
 import { defaultState, downloadBackup, loadState, restoreBackup, saveState } from "./lib/storage";
@@ -8,7 +8,7 @@ import { fetchSubscription, inspectImport, MAX_CONFIG_SIZE, parseProfile, valida
 import { CONNECT_LIMIT, STALE_SUB_MS, needProbe, rankCandidates, smartStepText } from "./lib/autoConnect";
 import { browserStatus, connectionPayload, exportText, hasNativeCore, nativeRequest, supportsNative } from "./lib/native";
 import { useTunnel } from "./lib/useTunnel";
-import { formatBytes, formatDuration, latencyColor, uid } from "./lib/format";
+import { formatBytes, latencyColor, uid } from "./lib/format";
 import { Button, Choice, Dialog, Notice, textFor, Toggle, type Text } from "./components/ui";
 import { ConfigEditor, SubscriptionForm } from "./components/ConfigEditor";
 import { ProfileDetail } from "./components/ProfileDetail";
@@ -409,13 +409,14 @@ export default function App() {
 
   return <div className="relative flex min-h-dvh items-center justify-center bg-black lg:p-8">
     <div className={cn("app-shell relative flex h-dvh w-full max-w-[430px] flex-col overflow-hidden lg:h-[min(860px,calc(100dvh-64px))] lg:rounded-[36px] lg:shadow-[0_30px_110px_#0008] lg:ring-1 lg:ring-white/10", "bg-black")}>
-      <header inert={sheet !== null} className="ios-header relative z-10 flex shrink-0 items-center justify-between px-5 pb-2 pt-[max(18px,env(safe-area-inset-top))]"><div><p className="ios-overline">VPN</p><h1 className="latin text-[22px] font-semibold tracking-tight">Khoram2Ry</h1></div><div className="flex items-center gap-2"><button onClick={() => setSheet("import")} title={titles.import} aria-label={titles.import} className="ios-toolbar-button"><Plus size={20} /></button><button onClick={() => setSheet("logs")} title={titles.logs} aria-label={titles.logs} className="ios-toolbar-button"><FileText size={18} /></button></div></header>
+      <header inert={sheet !== null} className="v2-header relative z-10 flex shrink-0 items-center justify-between px-5 pt-[max(18px,env(safe-area-inset-top))]"><h1 className="latin text-[18px] font-semibold tracking-tight">Khoram2Ry</h1><div className="flex items-center gap-1"><button onClick={() => setSheet("import")} title={titles.import} aria-label={titles.import} className="v2-header-button"><Plus size={20} /></button><button onClick={() => setSheet("logs")} title={titles.logs} aria-label={titles.logs} className="v2-header-button"><FileText size={17} /></button></div></header>
       {storageError != null && <div className="px-5 pb-2"><Notice danger>{errorMessage(storageError, state.lang)}</Notice></div>}
       <main inert={sheet !== null} className="relative z-10 min-h-0 flex-1 overflow-y-auto scroll-thin">
         <div key={tab} className="animate-fade-up">
-          {tab === "home" && <Home t={t} selected={selected} status={tunnel.status} busy={tunnel.busy} error={tunnel.error ? errorMessage(tunnel.error, state.lang) : null} routing={state.routing} onRouting={(routing) => { try { requireIdle(); patch({ routing }); } catch (e) { fail(e); } }} onChoose={() => setTab("servers")} onConfigFree={() => setTab("configfree")} resolvedIp={resolvedIp} onAdd={() => setSheet("import")} onGetApp={() => setSheet("getapp")} onTest={() => { if (selected) void testProfile(selected).catch(fail); }} testing={!!testingId} smartActive={smartActive} smartText={smartActive && smartPhase ? smartStepText(state.lang, smartPhase, smartDetail) : ""} autoOn={state.autoFastest || state.autoReconnect} native={hasNativeCore()} />}
+          {tab === "home" && <Home t={t} selected={selected} status={tunnel.status} busy={tunnel.busy} error={tunnel.error ? errorMessage(tunnel.error, state.lang) : null} routing={state.routing} onRouting={(routing) => { try { requireIdle(); patch({ routing }); } catch (e) { fail(e); } }} onChoose={() => setTab("servers")} resolvedIp={resolvedIp} onAdd={() => setSheet("import")} onGetApp={() => setSheet("getapp")} onTest={() => { if (selected) void testProfile(selected).catch(fail); }} testing={!!testingId} smartActive={smartActive} smartText={smartActive && smartPhase ? smartStepText(state.lang, smartPhase, smartDetail) : ""} autoOn={state.autoFastest || state.autoReconnect} native={hasNativeCore()} />}
           {tab === "servers" && <div className="px-5 pb-6">
             <div className="flex items-center justify-between"><div><h2 className="text-[19px] font-semibold">{t("سرورهای من", "My servers")}</h2><p className="mt-1 text-[11px] text-white/40">{state.profiles.length} {t("کانفیگ شخصی", "personal configurations")}</p></div><Button tone="primary" aria-label={titles.import} className="h-10 min-h-10 w-10 rounded-full px-0" onClick={() => setSheet("import")}><Plus size={18} /></Button></div>
+            <div className="mt-4 grid grid-cols-2 gap-2"><Button className="h-10 text-[11px]" onClick={() => setTab("subs")}><Link2 size={14} />{t("اشتراک‌ها", "Subscriptions")}</Button><Button className="h-10 text-[11px]" onClick={() => setTab("configfree")}><Download size={14} />Config Free</Button></div>
             {state.profiles.length > 0 && <><div className="mt-4 flex items-center gap-2 rounded-[10px] bg-[#1c1c1e] px-3 ring-1 ring-white/10"><Search size={16} className="text-white/35" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("جستجوی نام، آدرس یا پروتکل", "Search name, address or protocol")} aria-label={t("جستجوی سرور", "Search servers")} className="h-11 min-w-0 flex-1 bg-transparent text-[12px] placeholder:text-white/30" /></div><div className="mt-3 grid grid-cols-2 gap-2"><Choice label={t("نمایش", "Show")} value={filter} onChange={setFilter} options={[{ value: "all", label: t("همه سرورها", "All servers") }, { value: "fav", label: t("علاقه‌مندی‌ها", "Favorites") }, ...Array.from(new Set(state.profiles.map((p) => p.protocol))).map((value) => ({ value, label: value.toUpperCase() }))]} /><Choice label={t("مرتب‌سازی", "Sort by")} value={sort} onChange={setSort} options={[{ value: "added", label: t("جدیدترین", "Newest") }, { value: "latency", label: t("تأخیر واقعی", "Measured latency") }, { value: "name", label: t("نام", "Name") }]} /></div><div className="my-3 flex items-center justify-between gap-2"><Button disabled={tunnel.locked || !filtered.length || (!!testingId && !testProgress)} onClick={() => void testAll()} className="px-3 text-[11px]"><Zap size={14} />{testProgress ? `${t("توقف", "Cancel")} ${testProgress}` : t("تست واقعی همه", "Test all through proxy")}</Button><button aria-label={t("خروجی سرورهای فیلترشده", "Export filtered servers")} disabled={!filtered.length} onClick={() => void exportText(filtered.map((p) => p.raw).join("\n"), "khoram-servers.txt").catch(fail)} className="flex h-10 w-10 items-center justify-center text-white/50"><Download size={16} /></button></div></>}
             {state.profiles.length === 0 ? <Empty title={t("سرور خودت را اضافه کن", "Bring your own server")} description={t("هیچ سروری از قبل اضافه نشده. لینک، ساب‌لینک یا کانفیگ خودت را وارد کن.", "No servers are preloaded. Import your own link, subscription or configuration.")} action={t("افزودن اولین کانفیگ", "Add your first configuration")} onAction={() => setSheet("import")} /> : !filtered.length ? <p className="py-16 text-center text-[12px] text-white/40">{t("سروری با این فیلتر پیدا نشد.", "No servers match these filters.")}</p> : <div className="space-y-2">{filtered.map((p) => <div key={p.id} className={cn("flex items-center gap-2 rounded-[12px] p-3 ring-1 transition", state.selectedId === p.id ? "bg-[#0a84ff] ring-[#0a84ff]" : "bg-[#1c1c1e] ring-white/10")}>
               <button className="flex min-w-0 flex-1 items-center gap-3 text-start" onClick={() => choose(p.id)} aria-pressed={state.selectedId === p.id}><ProtocolMark profile={p} /><div className="min-w-0 flex-1"><p className="truncate text-[13px] font-medium">{p.name}</p><p className="latin mt-1 truncate text-[10px] text-white/40" dir="ltr">{p.protocol.toUpperCase()} / {p.host}</p></div></button><div className="flex flex-col items-end"><span className={cn("latin text-[11px]", latencyColor(p.latency))}>{testingId === p.id ? <Loader2 size={13} className="animate-spin" /> : p.latency != null ? `${p.latency} ms` : p.testedAt ? t("ناموفق", "Failed") : "-"}</span><div className="mt-1 flex"><button aria-label={t("علاقه‌مندی", "Favorite")} aria-pressed={!!p.favorite} onClick={() => setState((old) => ({ ...old, profiles: old.profiles.map((item) => item.id === p.id ? { ...item, favorite: !item.favorite } : item) }))} className="p-2"><Star size={14} className={p.favorite ? "fill-amber-300 text-amber-300" : "text-white/25"} /></button><button aria-label={t("جزئیات و ویرایش", "Details and editing")} onClick={() => { setDetailId(p.id); setSheet("detail"); }} className="p-2"><ChevronRight size={15} className="text-white/40 rtl:rotate-180" /></button></div></div></div>)}</div>}
@@ -429,7 +430,7 @@ export default function App() {
         </div>
       </main>
       {tab === "home" && sheet === null && <ConnectSlider t={t} connected={tunnel.status.available && tunnel.status.state === "connected"} pending={smartActive || tunnel.busy || tunnel.status.state === "connecting" || tunnel.status.state === "disconnecting"} disabled={tunnel.busy && !smartActive} onTrigger={() => void toggleConnection()} />}
-      <nav inert={sheet !== null} aria-label={t("منوی اصلی", "Main navigation")} className="app-nav relative z-10 grid shrink-0 grid-cols-5 border-t border-white/6 pt-2 pb-[max(12px,env(safe-area-inset-bottom))]">{([{ id: "home", icon: House, label: t("خانه", "Home") }, { id: "servers", icon: Server, label: t("سرورها", "Servers") }, { id: "configfree", icon: Download, label: "Config Free" }, { id: "subs", icon: Link2, label: t("اشتراک", "Subscriptions") }, { id: "settings", icon: Settings2, label: t("تنظیمات", "Settings") }] as const).map(({ id, icon: Icon, label }) => <button key={id} onClick={() => setTab(id)} aria-current={tab === id ? "page" : undefined} className={cn("flex flex-col items-center gap-1.5 py-2 text-[10px] transition", tab === id ? "text-[#0a84ff]" : "text-white/35")}><Icon size={19} strokeWidth={tab === id ? 2 : 1.6} />{label}</button>)}</nav>
+      <nav inert={sheet !== null} aria-label={t("منوی اصلی", "Main navigation")} className="app-nav relative z-10 grid shrink-0 grid-cols-3 border-t border-white/6 pt-2 pb-[max(12px,env(safe-area-inset-bottom))]">{([{ id: "home", icon: House, label: t("خانه", "Home") }, { id: "servers", icon: Server, label: t("کانفیگ‌ها", "Configs") }, { id: "settings", icon: Settings2, label: t("تنظیمات", "Settings") }] as const).map(({ id, icon: Icon, label }) => { const active = tab === id || (id === "servers" && (tab === "configfree" || tab === "subs")); return <button key={id} onClick={() => setTab(id)} aria-current={active ? "page" : undefined} className={cn("flex flex-col items-center gap-1.5 py-2 text-[10px] transition", active ? "text-[#0a84ff]" : "text-white/35")}><Icon size={19} strokeWidth={active ? 2 : 1.6} />{label}</button>; })}</nav>
       <input ref={backupInput} type="file" className="hidden" accept=".json,application/json" onChange={async (event) => {
         const file = event.target.files?.[0]; event.target.value = ""; if (!file) return;
         try { requireIdle(); if (file.size > MAX_CONFIG_SIZE) throw new AppError("TOO_LARGE"); const restored = restoreBackup(await file.text()); confirm({ title: t("اطلاعات فعلی با پشتیبان جایگزین شود؟", "Replace current data with this backup?"), hint: `${restored.profiles.length} ${t("سرور", "servers")}`, accept: async () => { requireIdle(); if (hasNativeCore()) await nativeRequest("clearProfiles"); setState(restored); notify(t("پشتیبان بازیابی شد", "Backup restored")); } }); } catch (e) { fail(e); }
@@ -501,74 +502,49 @@ function Empty({ title, description, action, onAction }: { title: string; descri
   return <div className="flex flex-col items-center px-3 py-16 text-center"><div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#0a84ff]/5"><Server size={29} strokeWidth={1.2} className="text-[#0a84ff]/70" /></div><h3 className="mt-5 text-[16px] font-medium">{title}</h3><p className="mt-2 max-w-[270px] text-[12px] leading-7 text-white/40">{description}</p><Button tone="primary" className="mt-5" onClick={onAction}><Plus size={16} />{action}</Button></div>;
 }
 
-function Home({ t, selected, status, busy, error, routing, onRouting, onChoose, onConfigFree, onAdd, onGetApp, onTest, testing, smartActive, smartText, autoOn, native, resolvedIp }: {
+function Home({ t, selected, status, busy, error, routing, onRouting, onChoose, onAdd, onGetApp, onTest, testing, smartActive, smartText, autoOn, native, resolvedIp }: {
   t: Text; selected: Profile | null; status: TunnelStatus; busy: boolean; error: string | null;
   routing: AppState["routing"]; onRouting: (r: AppState["routing"]) => void;
-  onChoose: () => void; onConfigFree: () => void; onAdd: () => void; onGetApp: () => void;
+  onChoose: () => void; onAdd: () => void; onGetApp: () => void;
   onTest: () => void; testing: boolean;
   smartActive: boolean; smartText: string; autoOn: boolean; native: boolean; resolvedIp: string;
 }) {
   const connected = status.available && status.state === "connected";
   const pending = smartActive || busy || status.state === "connecting" || status.state === "disconnecting";
-  const statusText = smartActive && smartText ? smartText : pending ? t("در حال آماده‌سازی اتصال", "Preparing connection") : connected ? t("اتصال محافظت‌شده", "Protected connection") : t("آماده اتصال", "Ready to connect");
-  const connectionTime = connected ? formatDuration(status.elapsedMs) : "00:00:00";
-  const serverDescription = selected
-    ? `${selected.host}${selected.port ? `:${selected.port}` : ""}`
-    : t("یک کانفیگ اضافه کن تا شروع کنیم", "Add a configuration to get started");
-  const routingText = routing === "smart" ? t("هوشمند", "Smart") : routing === "global" ? t("سراسری", "Global") : t("مستقیم", "Direct");
+  const statusText = smartActive && smartText ? smartText : pending ? t("در حال اتصال", "Connecting") : connected ? t("متصل", "Connected") : t("قطع است", "Disconnected");
+  const serverValue = selected ? selected.name : t("انتخاب نشده", "None selected");
 
-  return <div className="dashboard-home px-5 pb-5">
-    <section className={cn("connection-hero", connected && "is-connected", pending && "is-pending")}>
-      <div className="connection-hero-top">
-        <span className="connection-state"><span className="connection-state-dot" />{statusText}</span>
-        {autoOn && <span className="connection-auto"><Sparkles size={12} />{t("هوشمند", "Smart")}</span>}
+  return <div className="v2-home px-5 pb-5">
+    <section className="v2-home-group" aria-label={t("وضعیت اتصال", "Connection status")}>
+      <div className="v2-home-row">
+        <span className="v2-row-label"><Activity size={15} />{t("وضعیت اتصال", "Connection status")}</span>
+        <span className={cn("v2-row-value", connected ? "is-online" : pending ? "is-pending" : "")}>{statusText}</span>
       </div>
-      <div className="connection-hero-body">
-        <p className="connection-kicker">{connected ? t("زمان محافظت", "PROTECTED FOR") : t("تونل خصوصی تو", "YOUR PRIVATE TUNNEL")}</p>
-        <p className="connection-time latin" dir="ltr">{connectionTime}</p>
-        <p className="connection-caption">{connected ? t("ترافیک دستگاه از تونل انتخابی عبور می‌کند.", "Device traffic is using your selected tunnel.") : t("نوار پایین را بکش تا اتصال هوشمند شروع شود.", "Use the slider below to start a smart connection.")}</p>
-      </div>
-      <div className="connection-metrics" aria-label={t("آمار اتصال", "Connection statistics")}>
-        <div><Timer size={15} /><span>{t("مدت", "Time")}</span><strong className="latin" dir="ltr">{connectionTime}</strong></div>
-        <div><ArrowDown size={15} /><span>{t("دریافت", "Download")}</span><strong className="latin" dir="ltr">{status.downloaded == null ? "0 B" : formatBytes(status.downloaded)}</strong></div>
-        <div><Activity size={15} /><span>{t("پینگ", "Latency")}</span><strong className="latin" dir="ltr">{selected?.latency != null ? `${selected.latency} ms` : "—"}</strong></div>
-      </div>
-    </section>
-
-    <section className="dashboard-section">
-      <div className="dashboard-section-heading"><p>{t("اتصال فعال", "ACTIVE CONNECTION")}</p><button onClick={selected ? onChoose : onAdd}>{t("تغییر", "Change")}</button></div>
-      <button className={cn("active-server-card", !selected && "is-empty")} onClick={selected ? onChoose : onAdd}>
-        <span className="active-server-mark">{selected ? <ProtocolMark profile={selected} /> : <Plus size={21} />}</span>
-        <span className="active-server-copy"><strong>{selected?.name || t("انتخاب سرور", "Choose a server")}</strong><small className={selected ? "latin" : ""} dir={selected ? "ltr" : undefined}>{serverDescription}{resolvedIp ? ` · ${resolvedIp}` : ""}</small></span>
-        <span className="active-server-meta">{selected ? selected.protocol.toUpperCase() : t("افزودن", "Add")}<ChevronRight size={17} className="rtl:rotate-180" /></span>
+      <button className="v2-home-row v2-home-button" onClick={selected ? onChoose : onAdd}>
+        <span className="v2-row-label"><Server size={15} />{t("سرور", "Server")}</span>
+        <span className="v2-row-end"><span className="v2-row-value truncate">{serverValue}</span><ChevronRight size={15} className="rtl:rotate-180" /></span>
       </button>
-    </section>
-
-    <section className="dashboard-section">
-      <div className="dashboard-section-heading"><p>{t("ابزارهای سریع", "QUICK TOOLS")}</p></div>
-      <div className="quick-tools-grid">
-        <button className="quick-tool" onClick={onTest} disabled={!selected || testing || !native}>
-          <span className="quick-tool-icon">{testing ? <Loader2 size={19} className="animate-spin" /> : <Activity size={19} />}</span>
-          <span><strong>{testing ? t("در حال تست", "Testing") : t("تست اتصال", "Test connection")}</strong><small>{selected?.latency != null ? `${selected.latency} ms` : t("بررسی واقعی پراکسی", "Real proxy check")}</small></span>
-        </button>
-        <button className="quick-tool" onClick={onConfigFree}>
-          <span className="quick-tool-icon"><Download size={19} /></span>
-          <span><strong>Config Free</strong><small>{t("مرور سرورهای منتشرشده", "Browse shared servers")}</small></span>
-        </button>
+      <div className="v2-home-row">
+        <span className="v2-row-label"><ArrowDown size={15} />{t("دریافت", "Downloaded")}</span>
+        <span className="v2-row-value latin" dir="ltr">{status.downloaded == null ? "0 B" : formatBytes(status.downloaded)}</span>
       </div>
-    </section>
-
-    <section className="dashboard-section">
-      <div className="dashboard-section-heading"><p>{t("مسیر اتصال", "CONNECTION ROUTE")}</p></div>
-      <div className="route-panel">
-        <span className="route-panel-icon"><Radio size={18} /></span>
-        <span className="route-panel-copy"><strong>{t("حالت مسیریابی", "Routing mode")}</strong><small>{routingText}</small></span>
-        <select aria-label={t("مسیریابی", "Routing")} value={routing} onChange={(event) => onRouting(event.target.value as AppState["routing"])} disabled={connected || pending}>
+      <div className="v2-home-row">
+        <span className="v2-row-label"><ArrowUp size={15} />{t("ارسال", "Uploaded")}</span>
+        <span className="v2-row-value latin" dir="ltr">{status.uploaded == null ? "0 B" : formatBytes(status.uploaded)}</span>
+      </div>
+      <button className="v2-home-row v2-home-button" onClick={onTest} disabled={!selected || testing || !native}>
+        <span className="v2-row-label">{testing ? <Loader2 size={15} className="animate-spin" /> : <Zap size={15} />}{t("تست اتصال", "Test connection")}</span>
+        <span className="v2-row-end"><span className="v2-row-value latin" dir="ltr">{selected?.latency != null ? `${selected.latency} ms` : "—"}</span><ChevronRight size={15} className="rtl:rotate-180" /></span>
+      </button>
+      <div className="v2-home-row">
+        <span className="v2-row-label"><Radio size={15} />{t("مسیریابی", "Routing")}</span>
+        <select aria-label={t("مسیریابی", "Routing")} value={routing} onChange={(event) => onRouting(event.target.value as AppState["routing"])} disabled={connected || pending} className="v2-route-select">
           <option value="smart">{t("هوشمند", "Smart")}</option><option value="global">{t("سراسری", "Global")}</option><option value="direct">{t("مستقیم", "Direct")}</option>
         </select>
       </div>
     </section>
-
+    {selected && <p className="v2-server-caption latin" dir="ltr">{selected.host}{selected.port ? `:${selected.port}` : ""}{resolvedIp ? `  ·  ${resolvedIp}` : ""}</p>}
+    {autoOn && <p className="v2-auto-caption"><Sparkles size={12} />{t("اتصال هوشمند و وصل مجدد خودکار فعال است", "Smart connect and auto-reconnect are on")}</p>}
     {error && <div className="mt-4"><Notice danger>{error}</Notice></div>}
     {!native && <button onClick={onGetApp} className="ios-native-note"><Smartphone size={17} /><span><strong>{t("اتصال واقعی فقط در اندروید", "Native Android required")}</strong><small>{t("در مرورگر می‌توانی کانفیگ‌ها را مدیریت کنی.", "The browser can manage configurations only.")}</small></span><ChevronRight size={17} className="rtl:rotate-180" /></button>}
   </div>;
@@ -635,7 +611,8 @@ function ConnectSlider({ t, connected, pending, disabled, onTrigger }: { t: Text
         onPointerDown={(event) => {
           if (disabled || pending) return;
           const width = rail.current?.getBoundingClientRect().width || 0;
-          travelRef.current = Math.max(0, width - 60);
+          // Rail width minus the 25px knob and 3px padding on each side.
+          travelRef.current = Math.max(0, width - 31);
           setTravel(travelRef.current);
           event.currentTarget.dataset.startX = String(event.clientX);
           dragging.current = true;
