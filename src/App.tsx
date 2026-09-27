@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { Activity, ArrowDown, ArrowUp, ChevronRight, Code2, Download, FileText, Globe, House, KeyRound, Layers, Link2, Loader2, LockKeyhole, Plus, Power, Radio, RefreshCw, Search, Server, Settings2, Shield, Smartphone, Sparkles, Star, Trash2, Wifi, Zap } from "lucide-react";
 import { cn } from "./utils/cn";
 import type { AppLog, AppState, Profile, Subscription, Tab, TunnelStatus } from "./types";
@@ -413,7 +413,7 @@ export default function App() {
       {storageError != null && <div className="px-5 pb-2"><Notice danger>{errorMessage(storageError, state.lang)}</Notice></div>}
       <main inert={sheet !== null} className="relative z-10 min-h-0 flex-1 overflow-y-auto scroll-thin">
         <div key={tab} className="animate-fade-up">
-          {tab === "home" && <Home t={t} selected={selected} status={tunnel.status} busy={tunnel.busy} error={tunnel.error ? errorMessage(tunnel.error, state.lang) : null} routing={state.routing} onRouting={(routing) => { try { requireIdle(); patch({ routing }); } catch (e) { fail(e); } }} onConnect={() => void toggleConnection()} onChoose={() => setTab("servers")} onConfigFree={() => setTab("configfree")} resolvedIp={resolvedIp} onAdd={() => setSheet("import")} onGetApp={() => setSheet("getapp")} onTest={() => { if (selected) void testProfile(selected).catch(fail); }} testing={!!testingId} smartActive={smartActive} smartText={smartActive && smartPhase ? smartStepText(state.lang, smartPhase, smartDetail) : ""} autoOn={state.autoFastest || state.autoReconnect} native={hasNativeCore()} />}
+          {tab === "home" && <Home t={t} selected={selected} status={tunnel.status} busy={tunnel.busy} error={tunnel.error ? errorMessage(tunnel.error, state.lang) : null} routing={state.routing} onRouting={(routing) => { try { requireIdle(); patch({ routing }); } catch (e) { fail(e); } }} onChoose={() => setTab("servers")} onConfigFree={() => setTab("configfree")} resolvedIp={resolvedIp} onAdd={() => setSheet("import")} onGetApp={() => setSheet("getapp")} onTest={() => { if (selected) void testProfile(selected).catch(fail); }} testing={!!testingId} smartActive={smartActive} smartText={smartActive && smartPhase ? smartStepText(state.lang, smartPhase, smartDetail) : ""} autoOn={state.autoFastest || state.autoReconnect} native={hasNativeCore()} />}
           {tab === "servers" && <div className="px-5 pb-6">
             <div className="flex items-center justify-between"><div><h2 className="text-[19px] font-semibold">{t("سرورهای من", "My servers")}</h2><p className="mt-1 text-[11px] text-white/40">{state.profiles.length} {t("کانفیگ شخصی", "personal configurations")}</p></div><Button tone="primary" aria-label={titles.import} className="h-10 min-h-10 w-10 rounded-full px-0" onClick={() => setSheet("import")}><Plus size={18} /></Button></div>
             {state.profiles.length > 0 && <><div className="mt-4 flex items-center gap-2 rounded-[10px] bg-[#1c1c1e] px-3 ring-1 ring-white/10"><Search size={16} className="text-white/35" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("جستجوی نام، آدرس یا پروتکل", "Search name, address or protocol")} aria-label={t("جستجوی سرور", "Search servers")} className="h-11 min-w-0 flex-1 bg-transparent text-[12px] placeholder:text-white/30" /></div><div className="mt-3 grid grid-cols-2 gap-2"><Choice label={t("نمایش", "Show")} value={filter} onChange={setFilter} options={[{ value: "all", label: t("همه سرورها", "All servers") }, { value: "fav", label: t("علاقه‌مندی‌ها", "Favorites") }, ...Array.from(new Set(state.profiles.map((p) => p.protocol))).map((value) => ({ value, label: value.toUpperCase() }))]} /><Choice label={t("مرتب‌سازی", "Sort by")} value={sort} onChange={setSort} options={[{ value: "added", label: t("جدیدترین", "Newest") }, { value: "latency", label: t("تأخیر واقعی", "Measured latency") }, { value: "name", label: t("نام", "Name") }]} /></div><div className="my-3 flex items-center justify-between gap-2"><Button disabled={tunnel.locked || !filtered.length || (!!testingId && !testProgress)} onClick={() => void testAll()} className="px-3 text-[11px]"><Zap size={14} />{testProgress ? `${t("توقف", "Cancel")} ${testProgress}` : t("تست واقعی همه", "Test all through proxy")}</Button><button aria-label={t("خروجی سرورهای فیلترشده", "Export filtered servers")} disabled={!filtered.length} onClick={() => void exportText(filtered.map((p) => p.raw).join("\n"), "khoram-servers.txt").catch(fail)} className="flex h-10 w-10 items-center justify-center text-white/50"><Download size={16} /></button></div></>}
@@ -428,6 +428,7 @@ export default function App() {
           {tab === "settings" && <SettingsPanel state={state} locked={tunnel.locked || !!testingId || !!busySub} onPatch={patch} onBackup={() => void downloadBackup(state).catch(fail)} onRestore={() => backupInput.current?.click()} onGetApp={() => setSheet("getapp")} onNativeTools={(screen) => void nativeRequest("openScreen", { screen }).catch(fail)} onClear={() => confirm({ title: t("همه سرورها و اشتراک‌ها پاک شوند؟", "Clear all profiles and subscriptions?"), hint: t("این کار قابل برگشت نیست؛ ابتدا پشتیبان بگیر.", "This cannot be undone. Export a backup first."), accept: async () => { requireIdle(); if (hasNativeCore()) await nativeRequest("clearProfiles"); setState({ ...defaultState(), lang: state.lang, theme: state.theme }); setLogs([]); } })} />}
         </div>
       </main>
+      {tab === "home" && sheet === null && <ConnectSlider t={t} connected={tunnel.status.available && tunnel.status.state === "connected"} pending={smartActive || tunnel.busy || tunnel.status.state === "connecting" || tunnel.status.state === "disconnecting"} disabled={tunnel.busy && !smartActive} onTrigger={() => void toggleConnection()} />}
       <nav inert={sheet !== null} aria-label={t("منوی اصلی", "Main navigation")} className="app-nav relative z-10 grid shrink-0 grid-cols-5 border-t border-white/6 pt-2 pb-[max(12px,env(safe-area-inset-bottom))]">{([{ id: "home", icon: House, label: t("خانه", "Home") }, { id: "servers", icon: Server, label: t("سرورها", "Servers") }, { id: "configfree", icon: Download, label: "Config Free" }, { id: "subs", icon: Link2, label: t("اشتراک", "Subscriptions") }, { id: "settings", icon: Settings2, label: t("تنظیمات", "Settings") }] as const).map(({ id, icon: Icon, label }) => <button key={id} onClick={() => setTab(id)} aria-current={tab === id ? "page" : undefined} className={cn("flex flex-col items-center gap-1.5 py-2 text-[10px] transition", tab === id ? "text-[#0a84ff]" : "text-white/35")}><Icon size={19} strokeWidth={tab === id ? 2 : 1.6} />{label}</button>)}</nav>
       <input ref={backupInput} type="file" className="hidden" accept=".json,application/json" onChange={async (event) => {
         const file = event.target.files?.[0]; event.target.value = ""; if (!file) return;
@@ -500,10 +501,10 @@ function Empty({ title, description, action, onAction }: { title: string; descri
   return <div className="flex flex-col items-center px-3 py-16 text-center"><div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#0a84ff]/5"><Server size={29} strokeWidth={1.2} className="text-[#0a84ff]/70" /></div><h3 className="mt-5 text-[16px] font-medium">{title}</h3><p className="mt-2 max-w-[270px] text-[12px] leading-7 text-white/40">{description}</p><Button tone="primary" className="mt-5" onClick={onAction}><Plus size={16} />{action}</Button></div>;
 }
 
-function Home({ t, selected, status, busy, error, routing, onRouting, onConnect, onChoose, onConfigFree, onAdd, onGetApp, onTest, testing, smartActive, smartText, autoOn, native, resolvedIp }: {
+function Home({ t, selected, status, busy, error, routing, onRouting, onChoose, onConfigFree, onAdd, onGetApp, onTest, testing, smartActive, smartText, autoOn, native, resolvedIp }: {
   t: Text; selected: Profile | null; status: TunnelStatus; busy: boolean; error: string | null;
   routing: AppState["routing"]; onRouting: (r: AppState["routing"]) => void;
-  onConnect: () => void; onChoose: () => void; onConfigFree: () => void; onAdd: () => void; onGetApp: () => void;
+  onChoose: () => void; onConfigFree: () => void; onAdd: () => void; onGetApp: () => void;
   onTest: () => void; testing: boolean;
   smartActive: boolean; smartText: string; autoOn: boolean; native: boolean; resolvedIp: string;
 }) {
@@ -516,14 +517,6 @@ function Home({ t, selected, status, busy, error, routing, onRouting, onConnect,
     <div className="ios-connection-stage">
       <p className="ios-section-label text-center">{t("مدت اتصال", "CONNECTION TIME")}</p>
       <p className="ios-timer latin" dir="ltr">{connectionTime}</p>
-      <button
-        aria-label={smartActive ? t("لغو اتصال خودکار", "Cancel smart connect") : connected ? t("قطع VPN", "Disconnect VPN") : t("اتصال VPN", "Connect VPN")}
-        disabled={busy && !smartActive}
-        onClick={onConnect}
-        className={cn("ios-power-control", connected ? "is-connected" : "", pending && "is-pending")}
-      >
-        {pending ? <Loader2 className="animate-spin" size={31} strokeWidth={2.2} /> : <Power size={31} strokeWidth={2.2} />}
-      </button>
       <span className={cn("ios-status-pill", connected ? "is-connected" : pending ? "is-pending" : "")}>
         <span className="ios-status-dot" />{statusText}
       </span>
@@ -582,6 +575,89 @@ function Home({ t, selected, status, busy, error, routing, onRouting, onConnect,
 
     {error && <div className="mt-4"><Notice danger>{error}</Notice></div>}
     {!native && <button onClick={onGetApp} className="ios-native-note"><Smartphone size={17} /><span><strong>{t("اتصال واقعی فقط در اندروید", "Native Android required")}</strong><small>{t("در مرورگر می‌توانی کانفیگ‌ها را مدیریت کنی.", "The browser can manage configurations only.")}</small></span><ChevronRight size={17} className="rtl:rotate-180" /></button>}
+  </div>;
+}
+
+
+function ConnectSlider({ t, connected, pending, disabled, onTrigger }: { t: Text; connected: boolean; pending: boolean; disabled: boolean; onTrigger: () => void }) {
+  const rail = useRef<HTMLDivElement>(null);
+  const progressRef = useRef(0);
+  const travelRef = useRef(0);
+  const dragging = useRef(false);
+  const [progress, setProgress] = useState(0);
+  const [travel, setTravel] = useState(0);
+  const rtl = typeof document !== "undefined" && document.documentElement.dir === "rtl";
+
+  const setPosition = (next: number) => {
+    const bounded = Math.min(1, Math.max(0, next));
+    progressRef.current = bounded;
+    setProgress(bounded);
+  };
+
+  useEffect(() => {
+    if (!pending) setPosition(0);
+  }, [pending]);
+
+  const move = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!dragging.current) return;
+    const distance = Math.max(1, travelRef.current);
+    const delta = (event.clientX - Number(event.currentTarget.dataset.startX || event.clientX)) * (rtl ? -1 : 1);
+    setPosition(delta / distance);
+  };
+
+  const finish = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!dragging.current) return;
+    dragging.current = false;
+    try { event.currentTarget.releasePointerCapture(event.pointerId); } catch { /* pointer already released */ }
+    if (progressRef.current >= 0.78) {
+      setPosition(1);
+      onTrigger();
+    } else {
+      setPosition(0);
+    }
+  };
+
+  const label = pending
+    ? t("در حال اتصال…", "Connecting…")
+    : connected
+      ? t("برای قطع اتصال بکش", "Slide to disconnect")
+      : t("برای اتصال بکش", "Slide to connect");
+
+  return <div className="ios-slider-shell" aria-live="polite">
+    <div ref={rail} className={cn("ios-connect-slider", connected && "is-connected", pending && "is-pending", disabled && "is-disabled")}>
+      <p className="ios-slider-label">{label}</p>
+      <button
+        type="button"
+        className="ios-slider-knob"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(progress * 100)}
+        aria-valuetext={label}
+        role="slider"
+        disabled={disabled}
+        style={{ transform: `translateX(${(rtl ? -1 : 1) * progress * travel}px)` }}
+        onPointerDown={(event) => {
+          if (disabled || pending) return;
+          const width = rail.current?.getBoundingClientRect().width || 0;
+          travelRef.current = Math.max(0, width - 60);
+          setTravel(travelRef.current);
+          event.currentTarget.dataset.startX = String(event.clientX);
+          dragging.current = true;
+          event.currentTarget.setPointerCapture(event.pointerId);
+        }}
+        onPointerMove={move}
+        onPointerUp={finish}
+        onPointerCancel={finish}
+        onKeyDown={(event) => {
+          if (disabled || pending) return;
+          if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onTrigger(); }
+        }}
+      >
+        {pending ? <Loader2 size={22} className="animate-spin" /> : <Power size={22} />}
+      </button>
+    </div>
+    <p className="ios-slider-hint">{rtl ? t("به سمت چپ بکش", "Swipe left") : t("به سمت راست بکش", "Swipe right")}</p>
   </div>;
 }
 

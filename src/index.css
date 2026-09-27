@@ -62,11 +62,11 @@ body {
 .ios-home { max-width: 480px; margin: 0 auto; }
 .ios-connection-stage {
   display: flex;
-  min-height: 227px;
+  min-height: 146px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 10px 0 20px;
+  padding: 8px 0 12px;
 }
 .ios-section { margin-top: 18px; }
 .ios-section-label {
@@ -86,23 +86,67 @@ body {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.08em;
 }
-.ios-power-control {
+.ios-slider-shell {
+  position: relative;
+  z-index: 12;
+  flex: 0 0 auto;
+  padding: 10px 20px 8px;
+  border-top: 1px solid #27272a;
+  background: #000;
+}
+.ios-connect-slider {
+  position: relative;
+  height: 50px;
+  overflow: hidden;
+  border: 1px solid #3a3a3c;
+  border-radius: 14px;
+  background: #1c1c1e;
+}
+.ios-connect-slider::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(10, 132, 255, 0.1), transparent 48%, rgba(10, 132, 255, 0.05));
+}
+.ios-connect-slider.is-connected::after { background: linear-gradient(90deg, rgba(48, 209, 88, 0.12), transparent 56%); }
+.ios-connect-slider.is-pending::after { background: rgba(99, 99, 102, 0.24); }
+.ios-connect-slider.is-disabled { opacity: 0.68; }
+.ios-slider-label {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding-inline: 64px;
+  color: #a1a1a6;
+  font-size: 12px;
+  font-weight: 500;
+  pointer-events: none;
+}
+.ios-slider-knob {
+  position: absolute;
+  z-index: 2;
+  inset-block: 4px;
+  inset-inline-start: 4px;
   display: inline-flex;
-  height: 66px;
-  width: 66px;
+  width: 40px;
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 16px;
+  border-radius: 10px;
   background: #0a84ff;
   color: #fff;
-  box-shadow: 0 8px 22px rgba(10, 132, 255, 0.23);
-  transition: transform 160ms ease, background-color 160ms ease;
+  box-shadow: 0 4px 12px rgba(10, 132, 255, 0.35);
+  touch-action: none;
+  will-change: transform;
 }
-.ios-power-control:active { transform: scale(0.94); }
-.ios-power-control.is-connected { background: #30d158; box-shadow: 0 8px 22px rgba(48, 209, 88, 0.21); }
-.ios-power-control.is-pending { background: #636366; }
-.ios-power-control:disabled { cursor: wait; opacity: 0.68; }
+.ios-connect-slider.is-connected .ios-slider-knob { background: #30d158; box-shadow: 0 4px 12px rgba(48, 209, 88, 0.32); }
+.ios-connect-slider.is-pending .ios-slider-knob { background: #636366; }
+.ios-slider-knob:disabled { cursor: wait; }
+.ios-slider-hint { margin: 5px 0 0; color: #636366; font-size: 10px; text-align: center; }
 .ios-status-pill {
   display: inline-flex;
   align-items: center;
