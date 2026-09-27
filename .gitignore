@@ -1,0 +1,7 @@
+node_modules/
+dist/
+
+# Local Android/IDE build output
+.gradle/
+*.apk
+*.aab

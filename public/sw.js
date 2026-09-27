@@ -1,4 +1,4 @@
-const CACHE = "khoram2ry-shell-v3";
+const CACHE = "khoram2ry-shell-v4";
 const SHELL = ["/", "/index.html", "/manifest.json", "/icon.png"];
 
 self.addEventListener("install", (event) => {

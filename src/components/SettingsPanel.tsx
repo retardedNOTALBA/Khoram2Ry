@@ -3,6 +3,7 @@ import { Download, ExternalLink, Upload, Smartphone, SlidersHorizontal, Trash2, 
 import type { AppState, Lang } from "../types";
 import { AppError, errorMessage } from "../lib/errors";
 import { hasNativeCore, validAdvanced } from "../lib/native";
+import { APP_VERSION } from "../lib/appVersion";
 import { Button, Choice, Field, Notice, textFor, Toggle } from "./ui";
 
 export function SettingsPanel({ state, locked, onPatch, onBackup, onRestore, onClear, onGetApp, onNativeTools }: {
@@ -60,7 +61,7 @@ export function SettingsPanel({ state, locked, onPatch, onBackup, onRestore, onC
     </section>
     <section className="space-y-3 border-t border-white/8 pt-5"><h3 className="text-[12px] text-white/50">{t("داده‌های شما", "Your data")}</h3><p className="text-[11px] leading-6 text-white/35">{t("فایل پشتیبان شامل رمزها و ساب‌لینک است و رمزنگاری نشده؛ آن را عمومی نکنید.", "Backups contain credentials and subscription URLs in plain text. Keep them private.")}</p><div className="grid grid-cols-2 gap-2"><Button onClick={onBackup}><Download size={15} />{t("پشتیبان", "Backup")}</Button><Button onClick={onRestore} disabled={locked}><Upload size={15} />{t("بازیابی", "Restore")}</Button></div><Button tone="danger" className="w-full" onClick={onClear} disabled={locked}><Trash2 size={15} />{t("پاک کردن تمام داده‌ها", "Clear all data")}</Button></section>
     <div className="border-t border-white/8 pt-5">
-      <div className="flex items-center gap-3"><img src="/icon.png" alt="" className="h-10 w-10 rounded-xl" /><div><p className="latin text-[14px] font-medium">Khoram2Ry <span className="text-white/30">2.0.1</span></p><p className="mt-1 text-[10px] text-white/35">{t("رابط مستقل؛ سرویس اتصال اندروید داخل خود برنامه", "Independent interface; Android connection service is built in")}</p></div></div>
+      <div className="flex items-center gap-3"><img src="/icon.png" alt="" className="h-10 w-10 rounded-xl" /><div><p className="latin text-[14px] font-medium">Khoram2Ry <span className="text-white/30">{APP_VERSION}</span></p><p className="mt-1 text-[10px] text-white/35">{t("رابط مستقل؛ سرویس اتصال اندروید داخل خود برنامه", "Independent interface; Android connection service is built in")}</p></div></div>
       <a href="https://github.com/retardedNOTALBA/Khoram2Ry" target="_blank" rel="noreferrer" className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-white/5 px-4 py-3 text-[12px] text-white/70 ring-1 ring-white/8 transition hover:bg-white/8 hover:text-white"><ExternalLink size={15} />GitHub</a>
     </div>
   </div>;

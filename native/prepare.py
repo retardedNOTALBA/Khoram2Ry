@@ -55,7 +55,7 @@ def prepare(upstream: Path, web: Path):
     gradle = app / "build.gradle.kts"
     replace_checked(gradle, "compileSdk = 35", 'compileSdk = 35\n    ndkVersion = "29.0.13113456"')
     replace_checked(gradle, 'applicationId = "com.v2ray.ang"', 'applicationId = "com.khoram2ry.app"')
-    replace_checked(gradle, 'versionName = "1.9.46"', 'versionName = "2.0.1"')
+    replace_checked(gradle, 'versionName = "1.9.46"', 'versionName = "2.1.0"')
     replace_checked(gradle, "dependencies {", 'dependencies {\n    implementation("androidx.webkit:webkit:1.12.1")')
 
     manifest = app / "src/main/AndroidManifest.xml"

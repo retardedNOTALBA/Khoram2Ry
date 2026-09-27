@@ -40,7 +40,9 @@ import java.util.concurrent.Executors
 class KhoramActivity : AppCompatActivity() {
     private lateinit var web: WebView
     private val main = Handler(Looper.getMainLooper())
+    // Long-running work (ping, subscription fetches) must never queue status checks.
     private val io = Executors.newSingleThreadExecutor()
+    private val telemetry = Executors.newSingleThreadExecutor()
 
     private var pendingStart: Pair<String, PreparedProfile>? = null
     private var pendingSave: Pair<String, String>? = null
@@ -320,6 +322,23 @@ class KhoramActivity : AppCompatActivity() {
         }
     }
 
+    // Status reads query Xray counters. Keep that native work off the UI thread and
+    // separate from slow ping/subscription jobs so the WebView stays responsive.
+    private fun backgroundTelemetry(
+        id: String,
+        work: () -> JSONObject
+    ) {
+        telemetry.execute {
+            try {
+                reply(id, work())
+            } catch (e: BridgeFailure) {
+                reply(id, error = e.code)
+            } catch (_: Exception) {
+                reply(id, error = "CORE_START_FAILED")
+            }
+        }
+    }
+
     private fun startPrepared(
         id: String,
         prepared: PreparedProfile
@@ -437,10 +456,9 @@ class KhoramActivity : AppCompatActivity() {
                     when (method) {
 
                         "status" ->
-                            reply(
-                                id,
+                            backgroundTelemetry(id) {
                                 KhoramRuntime.status()
-                            )
+                            }
 
                         "connect" -> {
                             if (starting || stopping) {
@@ -781,7 +799,8 @@ class KhoramActivity : AppCompatActivity() {
         )
 
         web.destroy()
-        io.shutdown()
+        io.shutdownNow()
+        telemetry.shutdownNow()
 
         super.onDestroy()
     }
