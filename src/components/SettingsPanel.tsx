@@ -22,7 +22,7 @@ export function SettingsPanel({ state, locked, onPatch, onBackup, onRestore, onC
     <div><h2 className="text-[19px] font-semibold">{t("تنظیمات", "Settings")}</h2><p className="mt-1 text-[11px] text-white/40">{t("کنترل بیشتر، بدون شلوغی", "More control. Less clutter.")}</p></div>
     <div className="grid grid-cols-2 gap-3"><Choice label={t("زبان", "Language")} value={state.lang} onChange={(lang) => onPatch({ lang: lang as Lang })} options={[{ value: "fa", label: "فارسی" }, { value: "en", label: "English" }]} /><Choice label={t("ظاهر", "Appearance")} value={state.theme} onChange={(theme) => onPatch({ theme: theme === "oled" ? "oled" : "night" })} options={[{ value: "night", label: t("شب", "Night") }, { value: "oled", label: "OLED" }]} /></div>
     <section className="space-y-1 rounded-[12px] bg-[#1c1c1e] p-4 ring-1 ring-white/10">
-      <h3 className="flex items-center gap-2 text-[13px] font-medium text-white"><Smartphone size={15} className="text-[#0a84ff]" />{t("اتصال خودکار", "Automatic connection")}</h3>
+      <h3 className="flex items-center gap-2 text-[13px] font-medium text-white"><Smartphone size={15} className="text-[#7987ff]" />{t("اتصال خودکار", "Automatic connection")}</h3>
       <p className="pb-1 text-[11px] leading-6 text-white/40">{t("با یک لمس: اشتراک به‌روز می‌شود، سریع‌ترین سرور پیدا می‌شود و در صورت قطعی، خودش به سرور بعدی وصل می‌شود.", "One tap does it all: subscriptions refresh, the fastest server is picked, and drops fall over to the next server.")}</p>
       <div className="divide-y divide-white/5">
         <Toggle label={t("اتصال خودکار هنگام باز شدن اپ", "Auto-connect on launch")} hint={t("فقط در نسخه اندروید", "Native Android app only")} value={state.autoConnect} onChange={(v) => onPatch({ autoConnect: v })} />
@@ -31,7 +31,7 @@ export function SettingsPanel({ state, locked, onPatch, onBackup, onRestore, onC
       </div>
     </section>
     <section className="space-y-4 border-t border-white/8 pt-5">
-      <h3 className="flex items-center gap-2 text-[13px] font-medium"><SlidersHorizontal size={15} className="text-[#0a84ff]" />{t("تنظیمات پیشرفته هسته", "Advanced core settings")}</h3>
+      <h3 className="flex items-center gap-2 text-[13px] font-medium"><SlidersHorizontal size={15} className="text-[#7987ff]" />{t("تنظیمات پیشرفته هسته", "Advanced core settings")}</h3>
       <p className="text-[11px] leading-6 text-white/40">{t("در اتصال بعدی نسخه اندروید اعمال می‌شود. کانفیگ JSON کامل از تنظیمات داخلی خودش استفاده می‌کند.", "Applied to your next Android connection. Full JSON configurations use their own core settings.")}</p>
       {locked && <Notice>{t("برای ویرایش، ابتدا VPN را قطع کنید.", "Disconnect the VPN before editing core settings.")}</Notice>}
       <fieldset disabled={locked} className="space-y-4 disabled:opacity-50">

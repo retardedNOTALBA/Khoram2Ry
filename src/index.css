@@ -2,9 +2,10 @@
 
 @theme {
   --font-sans: "Vazirmatn", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-latin: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
-  --color-ios-blue: #0a84ff;
-  --color-ios-green: #30d158;
+  --font-latin: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  --color-brand: #6e7cff;
+  --color-brand-bright: #9da8ff;
+  --color-success: #43d69e;
 }
 
 :root { color-scheme: dark; }
@@ -14,8 +15,8 @@ body,
 #root {
   min-height: 100%;
   min-height: 100dvh;
-  background: #000;
-  color: #f5f5f7;
+  background: #090a11;
+  color: #f6f7fb;
 }
 
 body {
@@ -29,191 +30,165 @@ body {
 
 .latin { font-family: var(--font-latin); }
 .selectable { user-select: text; }
-.app-shell { background: #000; }
-
-.v2-header {
-  min-height: 57px;
-  padding-bottom: 9px;
+.app-shell {
+  background:
+    radial-gradient(ellipse 75% 40% at 50% -8%, rgba(92, 106, 255, 0.18), transparent 70%),
+    linear-gradient(180deg, #11121c 0%, #090a11 42%, #08090e 100%);
 }
-.v2-header-button {
+
+.nova-header { min-height: 61px; padding-bottom: 9px; }
+.nova-header h1 { letter-spacing: -0.035em; }
+.nova-header-button {
   display: inline-flex;
   width: 34px;
   height: 34px;
   align-items: center;
   justify-content: center;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: #0a84ff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #c8ceff;
 }
-.v2-header-button:active { background: rgba(255, 255, 255, 0.08); }
+.nova-header-button:active { background: rgba(255, 255, 255, 0.11); }
 
 .app-nav {
-  background: #000;
-  border-color: #1e1e20 !important;
+  margin: 0 12px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 18px;
+  background: rgba(23, 24, 35, 0.96);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
 }
-.app-nav button[aria-current="page"] { color: #0a84ff; }
+.app-nav button[aria-current="page"] { color: #9da8ff; }
 
-/* Minimal V2Box-style home: one compact control group and a clear slider action. */
-.v2-home {
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  padding-top: 2px;
-}
-.v2-home-group {
-  overflow: hidden;
-  border: 1px solid #2c2c2e;
-  border-radius: 7px;
-  background: #1c1c1e;
-}
-.v2-home-row {
-  display: flex;
-  width: 100%;
-  min-height: 39px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 7px 10px;
-  color: #f5f5f7;
-}
-.v2-home-row + .v2-home-row { border-top: 1px solid #303035; }
-.v2-home-button { border-inline: 0; border-block: 0; background: transparent; text-align: start; }
-.v2-home-button:active { background: #28282a; }
-.v2-home-button:disabled { cursor: not-allowed; opacity: 0.45; }
-.v2-row-label {
-  display: inline-flex;
-  min-width: 0;
-  align-items: center;
-  gap: 7px;
-  color: #d1d1d6;
-  font-size: 11px;
-}
-.v2-row-label svg { flex: 0 0 auto; color: #0a84ff; }
-.v2-row-value {
-  max-width: 58%;
-  overflow: hidden;
-  color: #8e8e93;
-  font-size: 10px;
-  text-align: end;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.v2-row-value.is-online { color: #30d158; }
-.v2-row-value.is-pending { color: #ff9f0a; }
-.v2-row-end { display: inline-flex; min-width: 0; align-items: center; gap: 5px; color: #636366; }
-.v2-row-end .v2-row-value { max-width: 150px; }
-.v2-route-select {
-  max-width: 112px;
-  border: 0;
-  background: transparent;
-  color: #8e8e93;
-  font: inherit;
-  font-size: 10px;
-  text-align: end;
-}
-.v2-route-select:disabled { opacity: 0.45; }
-.v2-server-caption {
-  overflow: hidden;
-  margin: 8px 3px 0;
-  color: #636366;
-  font-size: 10px;
-  text-align: start;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.v2-auto-caption {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin: 8px 3px 0;
-  color: #636366;
-  font-size: 10px;
-}
-.v2-auto-caption svg { color: #0a84ff; }
-
-/* The only primary action on Home. It stays at the bottom above the tab bar. */
-.ios-slider-shell {
-  display: flex;
-  min-height: 62px;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 20px 7px;
-  background: #000;
-}
-.ios-connect-slider {
+/* Original connection screen: concise information, strong focus, and no visual noise. */
+.nova-home { width: 100%; max-width: 480px; margin: 0 auto; padding-top: 4px; }
+.nova-hero {
   position: relative;
-  width: min(172px, 54vw);
-  height: 31px;
   overflow: hidden;
-  border: 0;
-  border-radius: 999px;
-  background: #f2f2f7;
+  border: 1px solid rgba(157, 168, 255, 0.2);
+  border-radius: 25px;
+  background: linear-gradient(135deg, rgba(38, 42, 73, 0.95), rgba(21, 22, 34, 0.98) 54%, rgba(29, 32, 54, 0.94));
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
 }
-.ios-connect-slider.is-connected { background: #30d158; }
-.ios-connect-slider.is-pending { background: #d1d1d6; }
-.ios-connect-slider.is-disabled { opacity: 0.7; }
-.ios-slider-label {
+.nova-hero::before {
   position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-  padding-inline: 33px 11px;
-  color: #151515;
-  font-family: var(--font-latin);
-  font-size: 9px;
-  font-weight: 500;
+  inset-inline-end: -80px;
+  bottom: -105px;
+  width: 230px;
+  height: 230px;
+  border: 1px solid rgba(157, 168, 255, 0.18);
+  border-radius: 999px;
+  box-shadow: 0 0 0 28px rgba(157, 168, 255, 0.03), 0 0 0 57px rgba(157, 168, 255, 0.025);
+  content: "";
   pointer-events: none;
 }
-.ios-connect-slider.is-connected .ios-slider-label { color: #06220f; }
-.ios-slider-knob {
-  position: absolute;
-  z-index: 2;
-  inset-block: 3px;
-  inset-inline-start: 3px;
-  display: inline-flex;
-  width: 25px;
+.nova-hero.is-connected { border-color: rgba(67, 214, 158, 0.3); }
+.nova-hero.is-connected::before { border-color: rgba(67, 214, 158, 0.23); box-shadow: 0 0 0 28px rgba(67, 214, 158, 0.035), 0 0 0 57px rgba(67, 214, 158, 0.025); }
+.nova-hero.is-pending { border-color: rgba(255, 183, 77, 0.34); }
+.nova-hero-top,
+.nova-hero-main,
+.nova-hero-foot { position: relative; z-index: 1; }
+.nova-hero-top { display: flex; align-items: center; justify-content: space-between; padding: 16px 17px 0; }
+.nova-eyebrow { color: #aeb8ff; font-family: var(--font-latin); font-size: 9px; font-weight: 700; letter-spacing: 0.13em; }
+.nova-auto { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 999px; background: rgba(157, 168, 255, 0.1); color: #cbd2ff; font-size: 10px; }
+.nova-hero-main { display: flex; align-items: center; gap: 15px; min-height: 130px; padding: 17px 19px 22px; }
+.nova-signal { position: relative; display: grid; width: 71px; height: 71px; flex: 0 0 71px; place-items: center; }
+.nova-signal-ring { position: absolute; border: 1px solid rgba(157, 168, 255, 0.26); border-radius: 999px; }
+.nova-signal-ring.ring-one { inset: 4px; }
+.nova-signal-ring.ring-two { inset: 12px; border-color: rgba(157, 168, 255, 0.42); }
+.nova-signal-core { position: relative; z-index: 1; display: inline-flex; width: 37px; height: 37px; align-items: center; justify-content: center; border-radius: 13px; background: #7987ff; color: #0f1020; box-shadow: 0 8px 20px rgba(93, 108, 255, 0.28); }
+.nova-hero.is-connected .nova-signal-ring { border-color: rgba(67, 214, 158, 0.35); }
+.nova-hero.is-connected .nova-signal-core { background: #43d69e; color: #08241a; box-shadow: 0 8px 20px rgba(67, 214, 158, 0.22); }
+.nova-hero.is-pending .nova-signal-core { background: #ffb74d; color: #3a2300; }
+.nova-hero-copy { min-width: 0; }
+.nova-hero-copy p { margin: 0 0 5px; color: #c4caff; font-size: 11px; font-weight: 600; }
+.nova-hero-copy h2 { margin: 0; color: #fff; font-size: 20px; font-weight: 700; letter-spacing: -0.035em; }
+.nova-hero-copy small { display: block; margin-top: 7px; color: #9fa1b0; font-size: 10px; line-height: 1.65; }
+.nova-hero-line { height: 1px; margin: 0 17px; background: rgba(255, 255, 255, 0.09); }
+.nova-hero-foot { display: flex; align-items: center; justify-content: space-between; padding: 12px 17px 13px; }
+.nova-hero-foot span { display: inline-flex; align-items: center; gap: 6px; color: #9da0af; font-size: 10px; }
+.nova-hero-foot strong { color: #fff; font-size: 14px; font-weight: 600; letter-spacing: 0.04em; }
+.nova-pulse { width: 6px; height: 6px; border-radius: 99px; background: #878a99; }
+.nova-hero.is-connected .nova-pulse { background: #43d69e; box-shadow: 0 0 0 4px rgba(67, 214, 158, 0.1); }
+.nova-hero.is-pending .nova-pulse { background: #ffb74d; }
+
+.nova-section { margin-top: 20px; }
+.nova-section-title { margin: 0 2px 8px; color: #7f8191; font-family: var(--font-latin); font-size: 9px; font-weight: 700; letter-spacing: 0.12em; }
+.nova-server-card {
+  display: flex;
+  width: 100%;
   align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: 999px;
-  background: #111;
-  color: #fff;
-  touch-action: none;
-  will-change: transform;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 17px;
+  background: rgba(28, 29, 42, 0.86);
+  color: #f6f7fb;
+  text-align: start;
+  transition: transform 160ms ease, border-color 160ms ease, background-color 160ms ease;
 }
-.ios-slider-knob svg { width: 13px; height: 13px; }
+.nova-server-card:active { transform: scale(0.985); border-color: rgba(157, 168, 255, 0.32); background: #25273a; }
+.nova-server-card.is-empty { border-style: dashed; }
+.nova-server-icon { display: inline-flex; width: 42px; height: 42px; flex: 0 0 42px; align-items: center; justify-content: center; border-radius: 13px; background: rgba(121, 135, 255, 0.13); color: #aeb8ff; }
+.nova-server-icon .protocol-mark { width: 42px; height: 42px; border-radius: 13px; background: #7987ff; color: #10111f; }
+.nova-server-icon .protocol-mark svg { width: 18px; height: 18px; }
+.nova-server-copy { min-width: 0; flex: 1; }
+.nova-server-copy strong,
+.nova-server-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nova-server-copy strong { font-size: 13px; font-weight: 600; }
+.nova-server-copy small { margin-top: 4px; color: #9295a4; font-size: 10px; }
+.nova-chevron { flex: 0 0 auto; color: #777a89; }
+
+.nova-stat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.nova-stat { min-height: 72px; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; background: rgba(28, 29, 42, 0.78); }
+.nova-stat span { display: flex; align-items: center; gap: 6px; color: #9699a8; font-size: 10px; }
+.nova-stat span svg { color: #aeb8ff; }
+.nova-stat strong { display: block; margin-top: 9px; color: #f6f7fb; font-size: 15px; font-weight: 600; }
+
+.nova-controls { overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 17px; background: rgba(28, 29, 42, 0.78); }
+.nova-controls .nova-section-title { margin: 14px 13px 7px; }
+.nova-control-row { display: flex; min-height: 56px; align-items: center; gap: 10px; padding: 9px 12px; }
+.nova-control-row + .nova-control-row { border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.nova-control-button { width: 100%; border: 0; background: transparent; color: #f6f7fb; text-align: start; }
+.nova-control-button:active { background: rgba(255, 255, 255, 0.045); }
+.nova-control-button:disabled { cursor: not-allowed; opacity: 0.44; }
+.nova-control-icon { display: inline-flex; width: 31px; height: 31px; flex: 0 0 31px; align-items: center; justify-content: center; border-radius: 10px; background: rgba(121, 135, 255, 0.13); color: #aeb8ff; }
+.nova-control-copy { min-width: 0; flex: 1; }
+.nova-control-copy strong,
+.nova-control-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nova-control-copy strong { font-size: 12px; font-weight: 600; }
+.nova-control-copy small { margin-top: 3px; color: #9194a3; font-size: 10px; }
+.nova-control-row select { max-width: 105px; border: 0; border-radius: 9px; background: #2a2c3f; color: #c5ccff; font: inherit; font-size: 10px; font-weight: 600; padding: 7px 8px; }
+.nova-control-row select:disabled { opacity: 0.4; }
+
+/* Swipe is kept as the deliberate action, but presented as part of the new system. */
+.ios-slider-shell { flex: 0 0 auto; padding: 11px 20px 8px; background: #090a11; }
+.ios-connect-slider { position: relative; height: 51px; overflow: hidden; border: 1px solid rgba(157, 168, 255, 0.22); border-radius: 17px; background: #191b2a; box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16); }
+.ios-connect-slider::before { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(121, 135, 255, 0.17), transparent 58%); content: ""; pointer-events: none; }
+.ios-connect-slider.is-connected { border-color: rgba(67, 214, 158, 0.3); background: #182820; }
+.ios-connect-slider.is-connected::before { background: linear-gradient(90deg, rgba(67, 214, 158, 0.2), transparent 58%); }
+.ios-connect-slider.is-pending { border-color: rgba(255, 183, 77, 0.36); }
+.ios-connect-slider.is-disabled { opacity: 0.7; }
+.ios-slider-label { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center; margin: 0; padding-inline: 64px; color: #b9bed3; font-size: 12px; font-weight: 600; pointer-events: none; }
+.ios-slider-knob { position: absolute; z-index: 2; inset-block: 4px; inset-inline-start: 4px; display: inline-flex; width: 43px; align-items: center; justify-content: center; border: 0; border-radius: 13px; background: #7987ff; color: #10111f; box-shadow: 0 6px 16px rgba(92, 106, 255, 0.32); touch-action: none; will-change: transform; }
+.ios-slider-knob svg { width: 20px; height: 20px; }
+.ios-connect-slider.is-connected .ios-slider-knob { background: #43d69e; color: #092318; box-shadow: 0 6px 16px rgba(67, 214, 158, 0.24); }
+.ios-connect-slider.is-pending .ios-slider-knob { background: #ffb74d; color: #302000; }
 .ios-slider-knob:disabled { cursor: wait; }
 .ios-slider-hint { display: none; }
 
-.ios-native-note {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 10px;
-  margin-top: 16px;
-  padding: 11px;
-  border: 1px solid #2c2c2e;
-  border-radius: 7px;
-  background: #1c1c1e;
-  color: #0a84ff;
-  text-align: start;
-}
+.ios-native-note { display: flex; width: 100%; align-items: center; gap: 10px; margin-top: 16px; padding: 11px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; background: rgba(28, 29, 42, 0.78); color: #aeb8ff; text-align: start; }
 .ios-native-note span { min-width: 0; flex: 1; }
 .ios-native-note strong,
 .ios-native-note small { display: block; }
-.ios-native-note strong { color: #f5f5f7; font-size: 11px; font-weight: 500; }
-.ios-native-note small { margin-top: 3px; color: #8e8e93; font-size: 10px; }
+.ios-native-note strong { color: #f6f7fb; font-size: 11px; font-weight: 600; }
+.ios-native-note small { margin-top: 3px; color: #9295a4; font-size: 10px; }
 
-@keyframes fade-up { from { opacity: 0; transform: translate3d(0, 4px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+@keyframes fade-up { from { opacity: 0; transform: translate3d(0, 6px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
 @keyframes sheet-in { from { transform: translate3d(0, 104%, 0); } to { transform: translate3d(0, 0, 0); } }
 @keyframes toast-in { from { opacity: 0; transform: translate3d(0, 8px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
-.animate-fade-up { animation: fade-up 0.18s ease both; }
-.animate-sheet { animation: sheet-in 0.25s cubic-bezier(0.22, 1, 0.36, 1); will-change: transform; }
+.animate-fade-up { animation: fade-up 0.22s ease both; }
+.animate-sheet { animation: sheet-in 0.28s cubic-bezier(0.22, 1, 0.36, 1); will-change: transform; }
 .animate-toast { animation: toast-in 0.2s ease both; }
 .scroll-thin { scrollbar-width: none; overscroll-behavior: contain; }
 .scroll-thin::-webkit-scrollbar { display: none; }
@@ -223,10 +198,10 @@ textarea,
 select { font-family: inherit; }
 input:focus,
 textarea:focus,
-select:focus { outline: 2px solid rgba(10, 132, 255, 0.75); outline-offset: 2px; }
+select:focus { outline: 2px solid rgba(157, 168, 255, 0.75); outline-offset: 2px; }
 button:focus-visible,
 summary:focus-visible,
-a:focus-visible { outline: 2px solid #0a84ff; outline-offset: 3px; }
+a:focus-visible { outline: 2px solid #9da8ff; outline-offset: 3px; }
 button,
 summary { cursor: pointer; }
 button:disabled { cursor: not-allowed; }
