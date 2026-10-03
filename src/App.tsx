@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { Activity, ArrowDown, ArrowUp, Check, ChevronRight, CircleGauge, Code2, Download, FileText, Gauge, Globe, House, KeyRound, Layers, Link2, Loader2, LockKeyhole, Network, Plus, Power, Radio, RefreshCw, Route, Search, Server, Settings2, Shield, ShieldCheck, Smartphone, Sparkles, Star, Trash2, Wifi, Zap } from "lucide-react";
+import { Activity, ArrowDown, ArrowUp, Check, ChevronRight, CircleGauge, Code2, Download, FileText, Gauge, Globe, House, KeyRound, Layers, Link2, Loader2, LockKeyhole, Network, Plus, Power, Radio, RefreshCw, Route, Search, Server, Settings2, Shield, Smartphone, Sparkles, Star, Trash2, Wifi, Zap } from "lucide-react";
 import { cn } from "./utils/cn";
 import type { AppLog, AppState, Profile, Subscription, Tab, TunnelStatus } from "./types";
 import { defaultState, downloadBackup, loadState, restoreBackup, saveState } from "./lib/storage";
@@ -15,6 +15,7 @@ import { ProfileDetail } from "./components/ProfileDetail";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { GetApp } from "./components/GetApp";
 import { ConfigFree } from "./components/ConfigFree";
+import { KhoramMark } from "./components/KhoramMark";
 import { APP_UPDATE_URL, APP_VERSION, APP_VERSION_URL, compareVersions } from "./lib/appVersion";
 
 type Sheet = "import" | "subscription" | "detail" | "logs" | "getapp" | "confirm" | null;
@@ -651,7 +652,7 @@ function Home({ t, selected, status, traffic, busy, error, routing, onRouting, o
         <div className="command-orbit" aria-hidden="true">
           <span className="orbit-ring orbit-one" /><span className="orbit-ring orbit-two" /><span className="orbit-ring orbit-three" />
           <span className="orbit-node node-one" /><span className="orbit-node node-two" /><span className="orbit-node node-three" />
-          <span className="command-core">{pending ? <Loader2 size={29} className="animate-spin" /> : connected ? <ShieldCheck size={31} /> : <Shield size={30} />}</span>
+          <span className="command-core"><KhoramMark state={pending ? "pending" : connected ? "connected" : "idle"} /></span>
         </div>
         <div className="command-status-copy">
           <p>{statusText}</p>

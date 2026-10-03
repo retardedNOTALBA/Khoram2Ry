@@ -165,7 +165,17 @@ body {
 .node-one { top: 11px; inset-inline-start: 24px; }
 .node-two { inset-inline-end: 5px; bottom: 36px; }
 .node-three { bottom: 10px; inset-inline-start: 28px; border-color: rgba(216, 179, 107, 0.65); box-shadow: 0 0 8px rgba(216, 179, 107, 0.3); }
-.command-core { position: relative; display: grid; width: 51px; height: 51px; place-items: center; border: 1px solid rgba(var(--accent-rgb), 0.4); border-radius: 17px; background: linear-gradient(145deg, #68eddd, #35b9a9); color: #04120f; box-shadow: 0 12px 25px rgba(27, 162, 145, 0.23), inset 0 1px rgba(255, 255, 255, 0.55); }
+.command-core { position: relative; display: grid; width: 56px; height: 56px; place-items: center; border: 1px solid rgba(var(--accent-rgb), 0.4); border-radius: 18px; background: linear-gradient(145deg, #68eddd, #35b9a9); color: #04120f; box-shadow: 0 12px 25px rgba(27, 162, 145, 0.23), inset 0 1px rgba(255, 255, 255, 0.55); }
+.khoram-mark { width: 42px; height: 42px; overflow: visible; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .12)); }
+.khoram-mark-scan { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-dasharray: 7 8; opacity: .18; transform-box: fill-box; transform-origin: center; }
+.khoram-mark-shield { fill: none; stroke: currentColor; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+.khoram-mark-inner { fill: currentColor; opacity: .1; }
+.khoram-mark-bolt { fill: currentColor; stroke: currentColor; stroke-width: 1.1; stroke-linejoin: round; transform-box: fill-box; transform-origin: center; }
+.khoram-mark-glint { fill: rgba(255, 255, 255, .34); }
+.khoram-mark.is-pending .khoram-mark-scan { opacity: .55; animation: mark-scan 2.2s linear infinite; }
+.khoram-mark.is-pending .khoram-mark-bolt { animation: mark-charge 1.05s ease-in-out infinite; }
+.khoram-mark.is-connected .khoram-mark-scan { opacity: .32; animation: mark-scan 9s linear infinite; }
+.khoram-mark.is-connected .khoram-mark-bolt { animation: mark-charge 2.8s ease-in-out infinite; }
 .command-hero.is-connected .command-core { border-color: rgba(123, 255, 198, 0.44); background: linear-gradient(145deg, #6eeab2, #34ba7d); box-shadow: 0 12px 28px rgba(43, 187, 124, 0.25), 0 0 24px rgba(88, 221, 167, 0.1); }
 .command-hero.is-connected .orbit-two { animation: orbit-spin 12s linear infinite; }
 .command-hero.is-connected .orbit-one { animation: orbit-breathe 2.4s ease-in-out infinite; }
@@ -391,6 +401,8 @@ body {
 @keyframes progress-scan { 45%, 100% { transform: translateX(110%); } }
 @keyframes core-blink { 50% { opacity: .45; } }
 @keyframes button-shine { to { transform: translateX(100%); } }
+@keyframes mark-scan { to { transform: rotate(360deg); } }
+@keyframes mark-charge { 50% { transform: scale(.91); opacity: .68; } }
 .animate-fade-up { animation: fade-up 0.24s ease both; }
 .animate-sheet { animation: sheet-in 0.3s cubic-bezier(0.22, 1, 0.36, 1); will-change: transform; }
 .animate-toast { animation: toast-in 0.2s ease both; }
