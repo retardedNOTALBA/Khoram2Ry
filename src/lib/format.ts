@@ -28,6 +28,20 @@ export function formatDuration(ms: number): string {
   return h > 0 ? `${pad(h)}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
 }
 
+/** Human-readable transfer rate without presenting idle telemetry as activity. */
+export function formatRate(bytesPerSecond: number): string {
+  if (!Number.isFinite(bytesPerSecond) || bytesPerSecond <= 0) return "0 B/s";
+  return `${formatBytes(bytesPerSecond)}/s`;
+}
+
+/** A deterministic 0–100 health score based on the latest real proxy probe. */
+export function latencyScore(ms?: number | null): number | null {
+  if (ms == null || !Number.isFinite(ms) || ms < 0) return null;
+  if (ms <= 80) return 100;
+  if (ms >= 1200) return 10;
+  return Math.max(10, Math.round(100 - ((ms - 80) / 1120) * 90));
+}
+
 export function timeAgo(ts: number | undefined, neverLabel: string): string {
   if (!ts) return neverLabel;
   const d = Date.now() - ts;

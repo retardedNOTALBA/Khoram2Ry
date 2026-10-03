@@ -15,19 +15,19 @@ export function GetApp({ lang, native, onError }: { lang: Lang; native: boolean;
   ];
   return <div className="space-y-5">
     <div className="flex items-center gap-3">
-      <div className="flex h-12 w-12 items-center justify-center rounded-[12px] bg-[#7987ff] text-white"><Smartphone size={24} strokeWidth={1.7} /></div>
+      <div className="flex h-12 w-12 items-center justify-center rounded-[12px] bg-[#57dccb] text-white"><Smartphone size={24} strokeWidth={1.7} /></div>
       <div>
-        <h3 className="latin text-[18px] font-semibold">Khoram2Ry <span className="text-[#7987ff]">APK</span></h3>
+        <h3 className="latin text-[18px] font-semibold">Khoram2Ry <span className="text-[#57dccb]">APK</span></h3>
         <p className="mt-1 text-[11px] text-white/40">{t("یک اپ واحد؛ هسته VPN داخل خودش", "One app; the VPN core lives inside it")}</p>
       </div>
     </div>
 
-    <div className="rounded-2xl bg-[#7987ff]/6 p-4 ring-1 ring-[#7987ff]/15">
-      <p className="flex items-center gap-2 text-[13px] font-medium text-white"><Sparkles size={15} className="text-[#7987ff]" />{t("اتصال هوشمند با یک دکمه", "One-button smart connection")}</p>
+    <div className="rounded-2xl bg-[#57dccb]/6 p-4 ring-1 ring-[#57dccb]/15">
+      <p className="flex items-center gap-2 text-[13px] font-medium text-white"><Sparkles size={15} className="text-[#57dccb]" />{t("اتصال هوشمند با یک دکمه", "One-button smart connection")}</p>
       <div className="mt-3 space-y-2.5">
         {auto.map(({ icon: Icon, fa, en }) => (
           <p key={en} className="flex items-center gap-2.5 text-[11px] text-white/60">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/6"><Icon size={13} className="text-[#7987ff]" /></span>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/6"><Icon size={13} className="text-[#57dccb]" /></span>
             {lang === "fa" ? fa : en}
           </p>
         ))}
@@ -38,7 +38,7 @@ export function GetApp({ lang, native, onError }: { lang: Lang; native: boolean;
     </div>
 
     {native
-      ? <p className="flex items-center gap-2 text-[12px] text-[#7987ff]"><Check size={16} />{t("این نسخه اندروید است؛ دکمه پاور همان اتصال واقعی است.", "This is the Android build; the power button is the real connection.")}</p>
+      ? <p className="flex items-center gap-2 text-[12px] text-[#57dccb]"><Check size={16} />{t("این نسخه اندروید است؛ دکمه پاور همان اتصال واقعی است.", "This is the Android build; the power button is the real connection.")}</p>
       : <Notice>{t("الان داخل مرورگر هستی؛ مرورگر نمی‌تواند VPN دستگاه را روشن کند. برای اتصال واقعی، همین پروژه را به APK تبدیل و نصب کن.", "You are in a browser, which cannot start a device VPN. Turn this project into the APK and install it for real connections.")}</Notice>}
 
     {!native && <section className="space-y-3 border-t border-white/8 pt-4">

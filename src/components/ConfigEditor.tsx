@@ -54,7 +54,7 @@ export function ConfigEditor({ lang, onImport, onSubscription }: { lang: Lang; o
       <input className="hidden" ref={input} type="file" accept=".txt,.json,.conf,application/json,text/plain" onChange={(e) => { loadFile(e.target.files?.[0]); e.target.value = ""; }} />
       <input className="hidden" ref={qr} type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => { loadFile(e.target.files?.[0], true); e.target.value = ""; }} />
       {subscriptionUrl && <Notice>{t("این یک ساب‌لینک است. در مرحله بعد می‌توانی آن را ثبت کنی؛ هنوز درخواستی ارسال نشده.", "This is a subscription URL. Continue to review it before fetching. No request has been sent.")}</Notice>}
-      {!subscriptionUrl && preview && <div className="space-y-2 text-[12px]"><p className="flex items-center gap-2 text-[#7987ff]"><Check size={14} />{preview.profiles.length} {t("کانفیگ معتبر", "valid configurations")}{preview.duplicates > 0 && ` / ${preview.duplicates} ${t("تکراری", "duplicates")}`}</p>
+      {!subscriptionUrl && preview && <div className="space-y-2 text-[12px]"><p className="flex items-center gap-2 text-[#57dccb]"><Check size={14} />{preview.profiles.length} {t("کانفیگ معتبر", "valid configurations")}{preview.duplicates > 0 && ` / ${preview.duplicates} ${t("تکراری", "duplicates")}`}</p>
         {preview.invalid.length > 0 && <Notice danger>{preview.invalid.length} {t("مورد نامعتبر اضافه نمی‌شود.", "invalid entries will not be imported.")}<br />{t("خط", "Line")} {preview.invalid[0].line}: {errorMessage(new AppError(preview.invalid[0].code), lang)}</Notice>}
       </div>}
     </> : <div className="space-y-3">

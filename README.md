@@ -58,6 +58,8 @@ Khoram2Ry/
 - **Smart connection:** refresh, latency testing, fallback and reconnect remain available without branding references to other VPN apps.
 - **iOS-inspired 2.2 interface:** true-black Android chrome, iOS-style grouped rows, a compact connection timer and a one-tap blue power control — while keeping Khoram2Ry’s independent identity and Android behavior.
 - **Responsive native telemetry:** Xray traffic/status reads use a dedicated native worker, so a slow ping or subscription refresh does not freeze the WebView.
+- **Secure Command interface:** a brand-aligned command center now exposes live upload/download rates, session traffic, route security, latency health scoring, animated connection state and a fleet-level server overview without inventing telemetry in browser mode.
+- **Night + OLED surfaces:** both appearance modes now drive the app shell and Android theme color, with a cohesive teal/gold visual system, deliberate swipe protection and reduced-motion support.
 
 See `CONFIG-FREE.md` for the repository-side configuration management instructions.
 

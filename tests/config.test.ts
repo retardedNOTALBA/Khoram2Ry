@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { buildShareLink, decodeBase64, encodeBase64, fetchSubscription, inspectImport, parseProfile } from "../src/lib/parseShare";
 import { defaultState, restoreBackup } from "../src/lib/storage";
 import { browserStatus, nativeRequest, supportsNative, validAdvanced } from "../src/lib/native";
+import { formatRate, latencyScore } from "../src/lib/format";
 
 const id = "00000000-0000-4000-8000-000000000001";
 const input = `vless://${id}@server.invalid:8443?type=ws&security=tls&host=cdn.invalid&path=%2Fproxy&sni=cdn.invalid#Personal`;
@@ -13,6 +14,14 @@ test("fresh installations contain no servers or subscriptions", () => {
   assert.equal(defaultState().selectedId, null);
   assert.equal(browserStatus.state, "disconnected");
   assert.equal(browserStatus.uploaded, null);
+});
+test("live telemetry formatting and health scores stay bounded", () => {
+  assert.equal(formatRate(0), "0 B/s");
+  assert.equal(formatRate(1536), "1.50 KB/s");
+  assert.equal(latencyScore(null), null);
+  assert.equal(latencyScore(40), 100);
+  assert.equal(latencyScore(1200), 10);
+  assert.ok((latencyScore(250) || 0) > (latencyScore(700) || 0));
 });
 test("URI import preserves credentials, transport and the original link", () => {
   const p = parseProfile(input);
