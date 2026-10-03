@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
-import { Activity, ArrowDown, ArrowUp, Check, ChevronRight, ChevronsRight, CircleGauge, Code2, Download, FileText, Gauge, Globe, House, KeyRound, Layers, Link2, Loader2, LockKeyhole, Network, Plus, Power, Radio, RefreshCw, Route, Search, Server, Settings2, Shield, ShieldCheck, Smartphone, Sparkles, Star, Trash2, Wifi, Zap } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { Activity, ArrowDown, ArrowUp, Check, ChevronRight, CircleGauge, Code2, Download, FileText, Gauge, Globe, House, KeyRound, Layers, Link2, Loader2, LockKeyhole, Network, Plus, Power, Radio, RefreshCw, Route, Search, Server, Settings2, Shield, ShieldCheck, Smartphone, Sparkles, Star, Trash2, Wifi, Zap } from "lucide-react";
 import { cn } from "./utils/cn";
 import type { AppLog, AppState, Profile, Subscription, Tab, TunnelStatus } from "./types";
 import { defaultState, downloadBackup, loadState, restoreBackup, saveState } from "./lib/storage";
@@ -534,7 +534,7 @@ export default function App() {
           {tab === "settings" && <SettingsPanel state={state} locked={tunnel.locked || !!testingId || !!busySub} onPatch={patch} onBackup={() => void downloadBackup(state).catch(fail)} onRestore={() => backupInput.current?.click()} onGetApp={() => setSheet("getapp")} onNativeTools={(screen) => void nativeRequest("openScreen", { screen }).catch(fail)} onClear={() => confirm({ title: t("همه سرورها و اشتراک‌ها پاک شوند؟", "Clear all profiles and subscriptions?"), hint: t("این کار قابل برگشت نیست؛ ابتدا پشتیبان بگیر.", "This cannot be undone. Export a backup first."), accept: async () => { requireIdle(); if (hasNativeCore()) await nativeRequest("clearProfiles"); setState({ ...defaultState(), lang: state.lang, theme: state.theme }); setLogs([]); } })} />}
         </div>
       </main>
-      {tab === "home" && sheet === null && <ConnectSlider t={t} connected={tunnel.status.available && tunnel.status.state === "connected"} pending={smartActive || tunnel.busy || tunnel.status.state === "connecting" || tunnel.status.state === "disconnecting"} disabled={tunnel.busy && !smartActive} onTrigger={() => void toggleConnection()} />}
+      {tab === "home" && sheet === null && <ConnectButton t={t} connected={tunnel.status.available && tunnel.status.state === "connected"} pending={smartActive || tunnel.busy || tunnel.status.state === "connecting" || tunnel.status.state === "disconnecting"} disabled={tunnel.busy && !smartActive} onTrigger={() => void toggleConnection()} />}
       <nav inert={sheet !== null} aria-label={t("منوی اصلی", "Main navigation")} className="app-nav relative z-10 grid shrink-0 grid-cols-3 border-t border-white/6 pt-2 pb-[max(12px,env(safe-area-inset-bottom))]">{([{ id: "home", icon: House, label: t("خانه", "Home") }, { id: "servers", icon: Server, label: t("کانفیگ‌ها", "Configs") }, { id: "settings", icon: Settings2, label: t("تنظیمات", "Settings") }] as const).map(({ id, icon: Icon, label }) => { const active = tab === id || (id === "servers" && (tab === "configfree" || tab === "subs")); return <button key={id} onClick={() => setTab(id)} aria-current={active ? "page" : undefined} className={cn("app-nav-item flex flex-col items-center gap-1.5 py-2 text-[10px] transition", active ? "text-[#5ee6d5]" : "text-white/35")}><span className="app-nav-icon"><Icon size={19} strokeWidth={active ? 2.2 : 1.6} /></span>{label}</button>; })}</nav>
       <input ref={backupInput} type="file" className="hidden" accept=".json,application/json" onChange={async (event) => {
         const file = event.target.files?.[0]; event.target.value = ""; if (!file) return;
@@ -707,85 +707,36 @@ function Home({ t, selected, status, traffic, busy, error, routing, onRouting, o
   </div>;
 }
 
-function ConnectSlider({ t, connected, pending, disabled, onTrigger }: { t: Text; connected: boolean; pending: boolean; disabled: boolean; onTrigger: () => void }) {
-  const rail = useRef<HTMLDivElement>(null);
-  const progressRef = useRef(0);
-  const travelRef = useRef(0);
-  const dragging = useRef(false);
-  const [progress, setProgress] = useState(0);
-  const [travel, setTravel] = useState(0);
-  const rtl = typeof document !== "undefined" && document.documentElement.dir === "rtl";
-
-  const setPosition = (next: number) => {
-    const bounded = Math.min(1, Math.max(0, next));
-    progressRef.current = bounded;
-    setProgress(bounded);
-  };
-
-  useEffect(() => {
-    if (!pending) setPosition(0);
-  }, [pending]);
-
-  const move = (event: ReactPointerEvent<HTMLButtonElement>) => {
-    if (!dragging.current) return;
-    const distance = Math.max(1, travelRef.current);
-    const delta = (event.clientX - Number(event.currentTarget.dataset.startX || event.clientX)) * (rtl ? -1 : 1);
-    setPosition(delta / distance);
-  };
-
-  const finish = (event: ReactPointerEvent<HTMLButtonElement>) => {
-    if (!dragging.current) return;
-    dragging.current = false;
-    try { event.currentTarget.releasePointerCapture(event.pointerId); } catch { /* pointer already released */ }
-    if (progressRef.current >= 0.78) {
-      setPosition(1);
-      onTrigger();
-    } else {
-      setPosition(0);
-    }
-  };
-
+function ConnectButton({ t, connected, pending, disabled, onTrigger }: { t: Text; connected: boolean; pending: boolean; disabled: boolean; onTrigger: () => void }) {
+  const cancellable = pending && !disabled;
   const label = pending
-    ? t("در حال پردازش…", "Securing route…")
+    ? cancellable
+      ? t("لغو اتصال هوشمند", "Cancel smart connection")
+      : t("در حال ایمن‌سازی اتصال…", "Securing connection…")
     : connected
-      ? t("برای قطع اتصال بکش", "Slide to disconnect")
-      : t("برای اتصال امن بکش", "Slide to secure");
+      ? t("قطع اتصال امن", "Disconnect secure tunnel")
+      : t("اتصال امن", "Connect securely");
+  const hint = pending
+    ? cancellable
+      ? t("برای توقف عملیات لمس کن", "Tap to stop the current operation")
+      : t("هسته در حال آماده‌سازی تونل است", "The core is preparing your tunnel")
+    : connected
+      ? t("با یک لمس تونل را خاموش کن", "One tap safely stops the tunnel")
+      : t("بهترین سرور به‌صورت هوشمند انتخاب می‌شود", "The best server will be selected automatically");
 
-  return <div className="ios-slider-shell" aria-live="polite">
-    <div ref={rail} className={cn("ios-connect-slider", connected && "is-connected", pending && "is-pending", disabled && "is-disabled")} style={{ "--slide-progress": `${Math.round(progress * 100)}%` } as CSSProperties}>
-      <p className="ios-slider-label"><span>{label}</span>{!pending && <ChevronsRight size={16} className="rtl:rotate-180" />}</p>
-      <button
-        type="button"
-        className="ios-slider-knob"
-        aria-label={label}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={Math.round(progress * 100)}
-        aria-valuetext={label}
-        role="slider"
-        disabled={disabled}
-        style={{ transform: `translateX(${(rtl ? -1 : 1) * progress * travel}px)` }}
-        onPointerDown={(event) => {
-          if (disabled || pending) return;
-          const width = rail.current?.getBoundingClientRect().width || 0;
-          // Rail width minus the 43px knob and 4px padding on each side.
-          travelRef.current = Math.max(0, width - 51);
-          setTravel(travelRef.current);
-          event.currentTarget.dataset.startX = String(event.clientX);
-          dragging.current = true;
-          event.currentTarget.setPointerCapture(event.pointerId);
-        }}
-        onPointerMove={move}
-        onPointerUp={finish}
-        onPointerCancel={finish}
-        onKeyDown={(event) => {
-          if (disabled || pending) return;
-          if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onTrigger(); }
-        }}
-      >
-        {pending ? <Loader2 size={22} className="animate-spin" /> : <Power size={22} />}
-      </button>
-    </div>
-    <p className="ios-slider-hint">{rtl ? t("به سمت چپ بکش", "Swipe left") : t("به سمت راست بکش", "Swipe right")}</p>
+  return <div className="quick-connect-shell" aria-live="polite">
+    <button
+      type="button"
+      className={cn("quick-connect", connected && "is-connected", pending && "is-pending", cancellable && "is-cancellable")}
+      aria-label={label}
+      aria-pressed={connected}
+      aria-busy={pending && disabled}
+      disabled={disabled}
+      onClick={onTrigger}
+    >
+      <span className="quick-connect-power">{pending ? <Loader2 size={23} className="animate-spin" /> : <Power size={23} />}</span>
+      <span className="quick-connect-copy"><strong>{label}</strong><small>{hint}</small></span>
+      <span className="quick-connect-badge latin"><i />{connected ? "LIVE" : pending ? cancellable ? "CANCEL" : "SYNC" : "READY"}</span>
+    </button>
   </div>;
 }
