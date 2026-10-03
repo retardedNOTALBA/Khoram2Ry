@@ -34,9 +34,9 @@ export function ConfigFree({ lang, t, installed, onAdd }: {
   const isInstalled = (item: ConfigFreeResult) => installed.some((profile) => profile.raw === item.raw);
 
   return <div className="space-y-4">
-    <div className="rounded-[12px] bg-[#7987ff]/10 p-4 ring-1 ring-[#7987ff]/25">
+    <div className="rounded-[12px] bg-[#57dccb]/10 p-4 ring-1 ring-[#57dccb]/25">
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[#7987ff]/15"><ShieldCheck size={19} className="text-[#7987ff]" /></div>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[#57dccb]/15"><ShieldCheck size={19} className="text-[#57dccb]" /></div>
         <div className="min-w-0 flex-1">
           <h3 className="text-[14px] font-medium">{t("Config Free", "Config Free")}</h3>
           <p className="mt-1 text-[11px] leading-6 text-white/40">{t("کانفیگ‌های منتشرشده در مخزن مرکزی را ببین و هرکدام را خواستی به سرورهای خودت اضافه کن.", "Browse configurations from the central repository and add the ones you want.")}</p>

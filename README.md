@@ -53,11 +53,13 @@ Khoram2Ry/
 ## 🆕 Khoram2Ry additions
 
 - **Config Free:** centralized free-configuration feed from `public/config-free.json`.
-- **Remote updates:** `public/app-version.json` controls the current required app version.
+- **Remote updates:** `public/app-version.json` drives a centered bilingual release dialog with version comparison, release notes, verified GitHub source details and optional/required update modes.
 - **Server endpoint/IP:** the Android build resolves the selected server hostname and shows the resolved IP when available.
 - **Smart connection:** refresh, latency testing, fallback and reconnect remain available without branding references to other VPN apps.
 - **iOS-inspired 2.2 interface:** true-black Android chrome, iOS-style grouped rows, a compact connection timer and a one-tap blue power control — while keeping Khoram2Ry’s independent identity and Android behavior.
 - **Responsive native telemetry:** Xray traffic/status reads use a dedicated native worker, so a slow ping or subscription refresh does not freeze the WebView.
+- **Secure Command interface:** a brand-aligned command center now exposes live upload/download rates, session traffic, route security, latency health scoring, animated connection state and a fleet-level server overview without inventing telemetry in browser mode.
+- **Night + OLED surfaces:** both appearance modes now drive the app shell and Android theme color, with a cohesive teal/gold visual system, a clear one-tap connection control and reduced-motion support.
 
 See `CONFIG-FREE.md` for the repository-side configuration management instructions.
 
