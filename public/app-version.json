@@ -2,6 +2,20 @@
   "latestVersion": "2.2.0",
   "minVersion": "2.0.1",
   "updatedAt": "2026-09-27T00:00:00Z",
+  "publishedAt": "2026-09-27T00:00:00Z",
   "updateUrl": "https://github.com/retardedNOTALBA/Khoram2Ry/releases/latest",
-  "message": "A required update is available."
+  "releaseName": "Secure Command Edition",
+  "releaseNameFa": "نسخه مرکز فرمان امن",
+  "message": "A faster, clearer and more reliable Khoram2Ry release is ready.",
+  "messageFa": "نسخه‌ای سریع‌تر، شفاف‌تر و پایدارتر از Khoram2Ry آماده دریافت است.",
+  "notes": [
+    "Refined secure connection command center",
+    "Smarter server selection and live telemetry",
+    "Performance and reliability improvements"
+  ],
+  "notesFa": [
+    "مرکز فرمان اتصال امن با طراحی تازه",
+    "انتخاب هوشمندتر سرور و تله‌متری زنده",
+    "بهبود سرعت، پایداری و عملکرد برنامه"
+  ]
 }

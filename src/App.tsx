@@ -16,7 +16,8 @@ import { SettingsPanel } from "./components/SettingsPanel";
 import { GetApp } from "./components/GetApp";
 import { ConfigFree } from "./components/ConfigFree";
 import { KhoramMark } from "./components/KhoramMark";
-import { APP_UPDATE_URL, APP_VERSION, APP_VERSION_URL, compareVersions } from "./lib/appVersion";
+import { UpdateCenter } from "./components/UpdateCenter";
+import { APP_UPDATE_URL, APP_VERSION, APP_VERSION_URL, compareVersions, type UpdateDescriptor } from "./lib/appVersion";
 
 type Sheet = "import" | "subscription" | "detail" | "logs" | "getapp" | "confirm" | null;
 
@@ -86,7 +87,8 @@ export default function App() {
   const [confirmation, setConfirmation] = useState<{ title: string; hint?: string; accept: () => Promise<void> | void } | null>(null);
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [confirmError, setConfirmError] = useState<unknown>(null);
-  const [updateInfo, setUpdateInfo] = useState<{ latestVersion: string; minVersion?: string; updateUrl?: string; message?: string } | null>(null);
+  const [updateInfo, setUpdateInfo] = useState<UpdateDescriptor | null>(null);
+  const [updateDismissed, setUpdateDismissed] = useState(false);
   const updateRequired = !!updateInfo?.minVersion && compareVersions(APP_VERSION, updateInfo.minVersion) < 0;
   const [updateChecking, setUpdateChecking] = useState(true);
   const [resolvedIp, setResolvedIp] = useState("");
@@ -122,6 +124,7 @@ export default function App() {
     return () => { cancelled = true; };
   }, [selected?.id, selected?.host]);
   const closeSheet = useCallback(() => setSheet(null), []);
+  const dismissUpdate = useCallback(() => setUpdateDismissed(true), []);
 
   const notify = useCallback((message: string) => {
     setToast(message);
@@ -143,13 +146,22 @@ export default function App() {
       try {
         const response = await fetch(`${APP_VERSION_URL}?v=${Date.now()}`, { cache: "no-store", headers: { Accept: "application/json" } });
         if (!response.ok) throw new Error("UPDATE_CHECK_FAILED");
-        const remote = await response.json() as { latestVersion?: string; minVersion?: string; updateUrl?: string; message?: string };
-        if (!cancelled && remote.latestVersion && compareVersions(APP_VERSION, remote.latestVersion) < 0) setUpdateInfo({
-          latestVersion: remote.latestVersion,
-          minVersion: remote.minVersion,
-          updateUrl: remote.updateUrl || APP_UPDATE_URL,
-          message: remote.message,
-        });
+        const remote = await response.json() as Partial<UpdateDescriptor>;
+        if (!cancelled && remote.latestVersion && compareVersions(APP_VERSION, remote.latestVersion) < 0) {
+          setUpdateDismissed(false);
+          setUpdateInfo({
+            latestVersion: remote.latestVersion,
+            minVersion: remote.minVersion,
+            updateUrl: remote.updateUrl || APP_UPDATE_URL,
+            message: remote.message,
+            messageFa: remote.messageFa,
+            releaseName: remote.releaseName,
+            releaseNameFa: remote.releaseNameFa,
+            publishedAt: remote.publishedAt,
+            notes: Array.isArray(remote.notes) ? remote.notes.filter((note): note is string => typeof note === "string").slice(0, 4) : undefined,
+            notesFa: Array.isArray(remote.notesFa) ? remote.notesFa.filter((note): note is string => typeof note === "string").slice(0, 4) : undefined,
+          });
+        }
       } catch {
         // A temporary update-server failure must not lock users out of the app.
       } finally {
@@ -557,29 +569,7 @@ export default function App() {
         {sheet === "confirm" && confirmation && <div className="space-y-4"><h3 className="text-[15px]">{confirmation.title}</h3>{confirmation.hint && <p className="text-[12px] leading-6 text-white/45">{confirmation.hint}</p>}{confirmError != null && <Notice danger>{errorMessage(confirmError, state.lang)}</Notice>}<div className="grid grid-cols-2 gap-3"><Button onClick={closeSheet} disabled={confirmBusy}>{t("انصراف", "Cancel")}</Button><Button tone="danger" busy={confirmBusy} onClick={async () => { if (confirmBusy) return; setConfirmBusy(true); try { await confirmation.accept(); closeSheet(); } catch (e) { setConfirmError(e); } finally { setConfirmBusy(false); } }}>{t("تأیید", "Confirm")}</Button></div></div>}
       </Dialog>}
       {toast && <div className="pointer-events-none absolute inset-x-0 bottom-24 z-50 flex justify-center px-5" role="status"><div className="animate-toast max-w-full rounded-2xl bg-white/95 px-4 py-3 text-[12px] leading-6 text-zinc-950 shadow-xl">{toast}</div></div>}
-      {!updateChecking && updateInfo && !updateRequired && (
-        <div className="absolute inset-x-0 top-3 z-[90] flex justify-center px-4">
-          <div className="flex w-full max-w-[520px] items-center gap-3 rounded-2xl bg-[#151820]/95 p-3 ring-1 ring-[#57dccb]/20 shadow-xl backdrop-blur-md">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#57dccb]/10"><Download size={18} className="text-[#57dccb]" /></div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-semibold">{t("نسخه جدید موجود است", "New version available")}</p>
-              <p className="mt-1 text-[10px] text-white/40"><span className="latin">v{APP_VERSION}</span><span className="mx-1">→</span><span className="latin text-[#57dccb]">v{updateInfo.latestVersion}</span></p>
-            </div>
-            <a href={updateInfo.updateUrl || APP_UPDATE_URL} target="_blank" rel="noreferrer" className="shrink-0 rounded-xl bg-[#57dccb] px-3 py-2 text-[11px] font-semibold text-zinc-950">{t("آپدیت", "Update")}</a>
-          </div>
-        </div>
-      )}
-      {!updateChecking && updateInfo && updateRequired && <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 p-5 backdrop-blur-md">
-        <div className="w-full max-w-[360px] rounded-[28px] bg-[#151820] p-6 ring-1 ring-[#57dccb]/15 shadow-2xl">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#57dccb]/10"><RefreshCw size={25} className="text-[#57dccb]" /></div>
-          <h2 className="mt-5 text-center text-[19px] font-semibold">{t("نیاز به آپدیت", "You need update")}</h2>
-          <p className="mt-3 text-center text-[12px] leading-7 text-white/45">{updateInfo.message || t("این نسخه دیگر پشتیبانی نمی‌شود. لطفاً برنامه را به‌روز کن.", "This version is no longer supported. Please update the app.")}</p>
-          <div className="mt-4 rounded-2xl bg-white/4 p-3 text-center text-[11px] text-white/45">
-            <span className="latin">v{APP_VERSION}</span><span className="mx-2">→</span><span className="latin text-[#57dccb]">v{updateInfo.latestVersion}</span>
-          </div>
-          <a href={updateInfo.updateUrl || APP_UPDATE_URL} target="_blank" rel="noreferrer" className="mt-5 flex h-11 items-center justify-center rounded-xl bg-[#57dccb] px-4 text-[12px] font-semibold text-zinc-950">{t("دریافت آپدیت", "Get update")}</a>
-        </div>
-      </div>}
+      {!updateChecking && updateInfo && (!updateDismissed || updateRequired) && <UpdateCenter update={updateInfo} currentVersion={APP_VERSION} required={updateRequired} lang={state.lang} onClose={dismissUpdate} />}
     </div>
   </div>;
 }

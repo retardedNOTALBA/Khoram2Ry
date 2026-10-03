@@ -4,6 +4,7 @@ import { buildShareLink, decodeBase64, encodeBase64, fetchSubscription, inspectI
 import { defaultState, restoreBackup } from "../src/lib/storage";
 import { browserStatus, nativeRequest, supportsNative, validAdvanced } from "../src/lib/native";
 import { formatRate, latencyScore } from "../src/lib/format";
+import { compareVersions } from "../src/lib/appVersion";
 
 const id = "00000000-0000-4000-8000-000000000001";
 const input = `vless://${id}@server.invalid:8443?type=ws&security=tls&host=cdn.invalid&path=%2Fproxy&sni=cdn.invalid#Personal`;
@@ -22,6 +23,11 @@ test("live telemetry formatting and health scores stay bounded", () => {
   assert.equal(latencyScore(40), 100);
   assert.equal(latencyScore(1200), 10);
   assert.ok((latencyScore(250) || 0) > (latencyScore(700) || 0));
+});
+test("update versions compare normalized semantic segments", () => {
+  assert.equal(compareVersions("v2.2.0", "2.2"), 0);
+  assert.equal(compareVersions("2.3.0", "2.2.9"), 1);
+  assert.equal(compareVersions("2.2.9", "2.3.0"), -1);
 });
 test("URI import preserves credentials, transport and the original link", () => {
   const p = parseProfile(input);
